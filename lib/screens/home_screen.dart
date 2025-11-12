@@ -8,18 +8,62 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  // Store Icons for 12 apps...
+  List<IconData?> homeIcons = List.filled(12, null);
+
   // Search Controller..
   TextEditingController searchController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
+    var size = MediaQuery.of(context).size;
+    var columnCount = 2;
+    var minRowCountOnScreen = 6; // You have 12 items, 2 columns = 6 rows
+
+    // Calculate aspect ratio to fit all items on screen
+    var aspectRatio =
+        (size.width / columnCount) / (size.height / minRowCountOnScreen);
+
     return Scaffold(
       backgroundColor: Colors.blueGrey,
       body: Column(
-        mainAxisAlignment: MainAxisAlignment.end,
+        // alignment: Alignment.center,
         children: [
+          // 1️⃣ GridView (center of screen) >>>>
+          Expanded(
+            child: Center(
+              child: GridView.count(
+                crossAxisCount: 2,
+                primary: false,
+                padding: const EdgeInsets.only(
+                  left: 20,
+                  right: 20,
+                  bottom: 20,
+                  top: 55,
+                ),
+                crossAxisSpacing: 10,
+                mainAxisSpacing: 10,
+                physics: NeverScrollableScrollPhysics(), // Add this line
+                childAspectRatio: 1.5, // Add this line
+                children: List.generate(
+                  12,
+                  (index) => Container(
+                    padding: const EdgeInsets.all(12.0),
+                    margin: const EdgeInsets.all(3.0),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.white, width: 1.0),
+                      borderRadius: BorderRadius.circular(50),
+                    ),
+                    child: const Icon(Icons.add, size: 25.0),
+                  ),
+                ),
+              ),
+            ),
+          ),
+
+          // 2️⃣ Search bar + 3-dot button (bottom) >>>>>
           Padding(
-            padding: const EdgeInsets.only(bottom: 20.0, left: 10, right: 10),
+            padding: const EdgeInsets.only(bottom: 1.0, left: 10, right: 10),
             child: Row(
               children: [
                 Expanded(
@@ -56,6 +100,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 }
+
 
 
 
