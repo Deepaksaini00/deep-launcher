@@ -72,7 +72,7 @@
 // }
 
 // class _MyHomePageState extends State<MyHomePage> {
-//   int _counter = 0;
+//   int _counter = -1;
 
 //   void _incrementCounter() {
 //     setState(() {
@@ -139,6 +139,7 @@
 //   }
 // }
 
+import 'package:android_launcher/screens/home_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:installed_apps/installed_apps.dart';
 import 'package:installed_apps/app_info.dart';
@@ -150,74 +151,12 @@ void main() {
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
-
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Installed Apps',
-      home: InstalledAppsScreen(),
-    );
-  }
-}
-
-class InstalledAppsScreen extends StatefulWidget {
-  const InstalledAppsScreen({super.key});
-
-  @override
-  State<InstalledAppsScreen> createState() => _InstalledAppsScreenState();
-}
-
-class _InstalledAppsScreenState extends State<InstalledAppsScreen> {
-  List<AppInfo> apps = [];
-  bool isLoading = true;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadInstalledApps(); // directly call load function
-  }
-
-  /// Fetch installed apps (user + system)
-  Future<void> _loadInstalledApps() async {
-    setState(() => isLoading = true);
-
-    List<AppInfo> installedApps = await InstalledApps.getInstalledApps(
-    excludeSystemApps: true,          
-    excludeNonLaunchableApps: true,   
-    withIcon: false,
-    );
-
-    setState(() {
-      apps = installedApps;
-      isLoading = false;
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color.fromARGB(255, 1, 51, 231),
-      appBar: AppBar(
-        title: const Text('Installed Apps'),
-        centerTitle: true,
-        backgroundColor: const Color.fromARGB(255, 6, 97, 255),
-      ),
-      body: isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : ListView.builder(
-              itemCount: apps.length,
-              itemBuilder: (context, index) {
-                AppInfo app = apps[index];
-                return ListTile( 
-                  title: Text(app.name,
-                  style: const TextStyle(color: Colors.white),),
-                  onTap: () {
-                    InstalledApps.startApp(app.packageName);
-                  },
-                );
-              },
-            ),
+      title: 'Deep Launcher',
+      home: HomeScreen(),
     );
   }
 }
