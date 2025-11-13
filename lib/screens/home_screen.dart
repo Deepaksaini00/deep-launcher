@@ -22,6 +22,8 @@ class _HomeScreenState extends State<HomeScreen> {
   // Store installed apps ..
   List<AppInfo> installedApps = [];
   List<AppInfo> filteredApps = [];
+  List<AppInfo> pinnedApps = [];
+
   @override
   void initState() {
     super.initState();
@@ -30,13 +32,16 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _loadApps() async {
     var apps = await InstalledAppsService.getInstalledApps();
+    var pinned = await InstalledAppsService.getPinnedApps();
     apps.sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
     setState(() {
       installedApps = apps;
       filteredApps = apps;
+      pinnedApps = pinned;
     });
   }
 
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.blueGrey,
@@ -60,13 +65,30 @@ class _HomeScreenState extends State<HomeScreen> {
                     mainAxisSpacing: 10,
                     physics: NeverScrollableScrollPhysics(), // Add this line
                     childAspectRatio: 1.5, // Add this line
-                    children: List.generate(
-                      12,
-                      (index) => Container(
-                        padding: const EdgeInsets.all(12.0),
-                        margin: const EdgeInsets.all(3.0),
-                      ),
-                    ),
+                    children: List.generate(pinnedApps.length, (index) {
+                      final app = pinnedApps[index];
+                      return GestureDetector(
+                        onTap: () async =>
+                            await InstalledApps.startApp(app.packageName),
+                        onLongPress: () => dialogBox(context, app),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(
+                              Icons.apps,
+                              size: 40,
+                              color: Color.fromARGB(255, 187, 178, 178),
+                            ),
+
+                            const SizedBox(height: 5),
+                            // Container(
+                            //   padding: const EdgeInsets.all(10.0),
+                            //   margin: const EdgeInsets.all(4.0),
+                            // ),
+                          ],
+                        ),
+                      );
+                    }),
                   ),
                 ),
               ),
@@ -110,8 +132,32 @@ class _HomeScreenState extends State<HomeScreen> {
                                   .toList();
                             });
                           },
+
                           decoration: InputDecoration(
-                            hintText: 'Search App',
+                            prefixIcon: isSearching
+                                ? GestureDetector(
+                                    onTap: () {
+                                      FocusScope.of(context).unfocus();
+                                      setState(() {
+                                        isSearching = false;
+                                        searchController.clear();
+                                      });
+                                    },
+                                    child: const SizedBox(
+                                      width:
+                                          40, // fixed width so search box size doesn't change
+                                      child: Center(
+                                        child: Icon(
+                                          Icons.arrow_back,
+                                          color: Colors.black,
+                                          size: 26, // adjust as needed
+                                        ),
+                                      ),
+                                    ),
+                                  )
+                                : const SizedBox(width: 40),
+
+                            hintText: 'Search App ${installedApps.length}',
                             hintStyle: TextStyle(
                               color: const Color.fromARGB(230, 28, 28, 28),
                               fontSize: 16,
@@ -127,7 +173,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             ),
                             border: InputBorder.none,
                             contentPadding: const EdgeInsets.symmetric(
-                              vertical: 13.0,
+                              vertical: 15.0,
                               horizontal: 20.0,
                             ),
                           ),

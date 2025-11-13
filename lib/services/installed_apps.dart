@@ -1,10 +1,13 @@
-// import 'package:permission_handler/permission_handler.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:installed_apps/installed_apps.dart';
 import 'package:installed_apps/app_info.dart';
+import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class InstalledAppsService {
   // List of pinned Apps..
-  static List<AppInfo> pinnedApps = [];
+
+  static const _pinnedKey = 'pinned_apps';
 
   // Fetch and print Installed apps...
 
@@ -30,19 +33,43 @@ class InstalledAppsService {
   }
 
   // Add App to Pinned Apps List..!!
-  static void addToPinned(AppInfo app) {
-    if (!pinnedApps.any((a) => a.packageName == app.packageName)) {
-      pinnedApps.add(app);
+  static Future<void> addToPinned(AppInfo app) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    List<String> pinnedApps = prefs.getStringList(_pinnedKey) ?? [];
+
+    // Avoid duplicates
+    if (!pinnedApps.any((a) => jsonDecode(a)['package'] == app.packageName)) {
+      pinnedApps.add(
+        jsonEncode({'name': app.name, 'package': app.packageName}),
+      );
+      await prefs.setStringList(_pinnedKey, pinnedApps);
+      print('📌 Pinned app: ${app.name}');
     }
   }
 
   // Remove App from Pinned Apps List..!!
-  static void removePinned(AppInfo app) {
-    pinnedApps.removeWhere((a) => a.packageName == app.packageName);
+  static Future<void> removePinned(String packageName) async {
+    final prefs = await SharedPreferences.getInstance();
+    List<String> pinnedApps = prefs.getStringList(_pinnedKey) ?? [];
+    pinnedApps.removeWhere((a) => jsonDecode(a)['package'] == packageName);
+    await prefs.setStringList(_pinnedKey, pinnedApps);
   }
 
   // Get all Pinned Apps...!!
-  static List<AppInfo> getPinnedApps() {
-    return pinnedApps;
+  static Future<List<AppInfo>> getPinnedApps() async {
+    List<AppInfo> pinnedAppList = [];
+    final prefs = await SharedPreferences.getInstance();
+    List<String> pinnedApps = prefs.getStringList(_pinnedKey) ?? [];
+
+    for (var item in pinnedApps) {
+      var data = jsonDecode(item);
+      try {
+        var app = await InstalledApps.getAppInfo(data['package']);
+        if (app != null) {
+          pinnedAppList.add(app);
+        }
+      } catch (_) {}
+    }
+    return pinnedAppList;
   }
 }

@@ -18,7 +18,7 @@ Future<void> dialogBox(BuildContext context, AppInfo app) async {
           children: [
             ListTile(
               leading: const Icon(Icons.add_box_outlined),
-              title: const Text("Add to main Grid"),
+              title: const Text("Add To Main Grid"),
               onTap: () {
                 InstalledAppsService.addToPinned(app);
                 Navigator.pop(context);
