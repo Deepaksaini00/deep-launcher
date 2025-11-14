@@ -72,4 +72,16 @@ class InstalledAppsService {
     }
     return pinnedAppList;
   }
+
+  // ✅ Save custom icon key
+  static Future<void> saveIcons(String packageName, String iconKey) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(packageName, iconKey);
+  }
+
+  // Load icons
+  static Future<String?> getSavedIcon(String packageName) async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(packageName);
+  }
 }

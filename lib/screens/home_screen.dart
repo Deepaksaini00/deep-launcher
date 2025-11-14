@@ -1,3 +1,4 @@
+import 'package:android_launcher/icons/app_icons.dart';
 import 'package:android_launcher/services/installed_apps.dart';
 import 'package:android_launcher/widgets/dialog_box.dart';
 import 'package:flutter/material.dart';
@@ -15,6 +16,7 @@ class _HomeScreenState extends State<HomeScreen> {
   bool isSearching = false;
   // Store Icons for 12 apps...
   List<IconData?> homeIcons = List.filled(12, null);
+  IconData defaultIcon = Icons.apps;
 
   // Search Controller..
   TextEditingController searchController = TextEditingController();
@@ -28,6 +30,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     _loadApps();
+    loadPinnedApps();
   }
 
   void _loadApps() async {
@@ -40,6 +43,70 @@ class _HomeScreenState extends State<HomeScreen> {
       pinnedApps = pinned;
     });
   }
+
+  Future<void> loadPinnedApps() async {
+    pinnedApps = await InstalledAppsService.getInstalledApps();
+    setState(() {});
+  }
+
+  Widget buildTile(AppInfo app) {
+    return FutureBuilder<String?>(
+      future: InstalledAppsService.getSavedIcon(app.packageName),
+      builder: (context, snapshot) {
+        String? iconKey = snapshot.data;
+        IconData iconToShow = iconKey != null ? icons[iconKey]! : defaultIcon;
+
+        return GestureDetector(
+          onTap: () async => await InstalledApps.startApp(app.packageName),
+
+          onLongPress: () {
+            AppDialogs.pinnedDialogBox(
+              context,
+              app,
+              loadPinnedApps, // 🔥 correct refresh
+            );
+          },
+
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                iconToShow,
+                size: 40,
+                color: const Color.fromARGB(255, 223, 221, 221),
+              ),
+              const SizedBox(height: 5),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  // Widget buildTile(AppInfo app) {
+  //   IconData iconToShow = icons[app.packageName] ?? defaultIcon;
+  //   return GestureDetector(
+  //     onTap: () async => await InstalledApps.startApp(app.packageName),
+  //     onLongPress: () {
+  //       AppDialogs.pinnedDialogBox(
+  //         context,
+  //         app,
+  //         loadPinnedApps, // refresh when icon updated
+  //       );
+  //     },
+  //     child: Column(
+  //       mainAxisAlignment: MainAxisAlignment.center,
+  //       children: [
+  //         Icon(
+  //           iconToShow,
+  //           size: 40,
+  //           color: const Color.fromARGB(255, 223, 221, 221),
+  //         ),
+  //         const SizedBox(height: 5),
+  //       ],
+  //     ),
+  //   );
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -67,27 +134,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     childAspectRatio: 1.5, // Add this line
                     children: List.generate(pinnedApps.length, (index) {
                       final app = pinnedApps[index];
-                      return GestureDetector(
-                        onTap: () async =>
-                            await InstalledApps.startApp(app.packageName),
-                        onLongPress: () => dialogBox(context, app),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Icon(
-                              Icons.apps,
-                              size: 40,
-                              color: Color.fromARGB(255, 187, 178, 178),
-                            ),
-
-                            const SizedBox(height: 5),
-                            // Container(
-                            //   padding: const EdgeInsets.all(10.0),
-                            //   margin: const EdgeInsets.all(4.0),
-                            // ),
-                          ],
-                        ),
-                      );
+                      return buildTile(app);
                     }),
                   ),
                 ),
@@ -208,7 +255,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         await InstalledApps.startApp(app.packageName);
                       },
                       onLongPress: () {
-                        dialogBox(context, app);
+                        AppDialogs.appDialogBox(context, app, loadPinnedApps);
                       },
                     );
                   },
