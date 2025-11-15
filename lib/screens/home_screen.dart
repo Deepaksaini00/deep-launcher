@@ -1,4 +1,5 @@
 import 'package:android_launcher/icons/app_icons.dart';
+import 'package:android_launcher/services/global_actions.dart';
 import 'package:android_launcher/services/installed_apps.dart';
 import 'package:android_launcher/widgets/dialog_box.dart';
 import 'package:flutter/material.dart';
@@ -30,7 +31,6 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     _loadApps();
-    loadPinnedApps();
   }
 
   void _loadApps() async {
@@ -44,11 +44,6 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  Future<void> loadPinnedApps() async {
-    pinnedApps = await InstalledAppsService.getInstalledApps();
-    setState(() {});
-  }
-
   Widget buildTile(AppInfo app) {
     return FutureBuilder<String?>(
       future: InstalledAppsService.getSavedIcon(app.packageName),
@@ -60,11 +55,7 @@ class _HomeScreenState extends State<HomeScreen> {
           onTap: () async => await InstalledApps.startApp(app.packageName),
 
           onLongPress: () {
-            AppDialogs.pinnedDialogBox(
-              context,
-              app,
-              loadPinnedApps, // 🔥 correct refresh
-            );
+            AppDialogs.pinnedDialogBox(context, app, _loadApps);
           },
 
           child: Column(
@@ -72,10 +63,10 @@ class _HomeScreenState extends State<HomeScreen> {
             children: [
               Icon(
                 iconToShow,
-                size: 40,
-                color: const Color.fromARGB(255, 223, 221, 221),
+                size: 50,
+                color: Color.fromARGB(255, 43, 55, 59),
               ),
-              const SizedBox(height: 5),
+              const SizedBox(height: 6),
             ],
           ),
         );
@@ -83,35 +74,10 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // Widget buildTile(AppInfo app) {
-  //   IconData iconToShow = icons[app.packageName] ?? defaultIcon;
-  //   return GestureDetector(
-  //     onTap: () async => await InstalledApps.startApp(app.packageName),
-  //     onLongPress: () {
-  //       AppDialogs.pinnedDialogBox(
-  //         context,
-  //         app,
-  //         loadPinnedApps, // refresh when icon updated
-  //       );
-  //     },
-  //     child: Column(
-  //       mainAxisAlignment: MainAxisAlignment.center,
-  //       children: [
-  //         Icon(
-  //           iconToShow,
-  //           size: 40,
-  //           color: const Color.fromARGB(255, 223, 221, 221),
-  //         ),
-  //         const SizedBox(height: 5),
-  //       ],
-  //     ),
-  //   );
-  // }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.blueGrey,
+      backgroundColor: Color.fromARGB(255, 248, 240, 217),
       body: Stack(
         children: [
           Column(
@@ -130,8 +96,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     crossAxisSpacing: 10,
                     mainAxisSpacing: 10,
-                    physics: NeverScrollableScrollPhysics(), // Add this line
-                    childAspectRatio: 1.5, // Add this line
+                    physics: NeverScrollableScrollPhysics(),
+                    childAspectRatio: 1.5,
                     children: List.generate(pinnedApps.length, (index) {
                       final app = pinnedApps[index];
                       return buildTile(app);
@@ -164,8 +130,13 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                         child: TextField(
                           controller: searchController,
+                          autofocus: false,
+                          focusNode: FocusNode(skipTraversal: true),
                           onTap: () {
-                            setState(() => isSearching = true);
+                            if (!isSearching) {
+                              setState(() => isSearching = true);
+                            }
+                            // setState(() => isSearching = true);
                           },
                           // Filter the apps ...
                           onChanged: (query) {
@@ -214,8 +185,26 @@ class _HomeScreenState extends State<HomeScreen> {
                                 Icons.more_vert,
                                 color: Color.fromARGB(253, 0, 0, 0),
                               ),
-                              onPressed: () {
+                              onPressed: () async {
                                 // 3- dot working do it later....
+                                final action = await askGlobalAction(context);
+                                switch (action) {
+                                  case GlobalAction.refreshApps:
+                                    _loadApps();
+                                    break;
+                                  case GlobalAction.exportGridJson:
+                                    await InstalledAppsService.exportPinnedApps();
+                                    break;
+                                  case GlobalAction.importGridJson:
+                                    await InstalledAppsService.importPinnedApps();
+                                    _loadApps();
+                                    break;
+                                  case GlobalAction.changeTheme:
+                                    // await showThemePicker(context);
+                                    break;
+                                  default:
+                                    break;
+                                }
                               },
                             ),
                             border: InputBorder.none,
@@ -240,7 +229,7 @@ class _HomeScreenState extends State<HomeScreen> {
               right: 0,
               bottom: 80,
               child: Container(
-                color: Colors.blueGrey.withOpacity(0.95),
+                color: Color(0xFF0F1724),
                 child: ListView.builder(
                   padding: const EdgeInsets.only(bottom: 30),
                   itemCount: filteredApps.length,
@@ -249,13 +238,13 @@ class _HomeScreenState extends State<HomeScreen> {
                     return ListTile(
                       title: Text(
                         app.name,
-                        style: const TextStyle(color: Colors.black),
+                        style: const TextStyle(color: Color(0xFFFFFFFF)),
                       ),
                       onTap: () async {
                         await InstalledApps.startApp(app.packageName);
                       },
                       onLongPress: () {
-                        AppDialogs.appDialogBox(context, app, loadPinnedApps);
+                        AppDialogs.appDialogBox(context, app, _loadApps);
                       },
                     );
                   },

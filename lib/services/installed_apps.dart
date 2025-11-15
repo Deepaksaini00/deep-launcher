@@ -84,4 +84,25 @@ class InstalledAppsService {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString(packageName);
   }
+
+  // Pinned Apps Export Json
+  static Future<String?> exportPinnedApps() async {
+    final prefs = await SharedPreferences.getInstance();
+    List<String> pinnedApps = prefs.getStringList(_pinnedKey) ?? [];
+    if (pinnedApps.isEmpty) return null;
+    final jsonString = jsonEncode(pinnedApps);
+    return jsonString;
+  }
+
+  // pinned apps import json
+  static Future<String?> importPinnedApps(String jsonString) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      List<dynamic> decode = jsonDecode(jsonString);
+      List<String> pinnedList = decode.map((e) => e.toString()).toList();
+      await prefs.setStringList(_pinnedKey, pinnedList);
+    } catch (e) {
+      print("Error Importing pinned apps: $e");
+    }
+  }
 }

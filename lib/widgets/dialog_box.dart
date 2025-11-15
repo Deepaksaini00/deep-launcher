@@ -25,7 +25,7 @@ class AppDialogs {
                 title: const Text("Add To Main Grid"),
                 onTap: () async {
                   await InstalledAppsService.addToPinned(app);
-                  // await refreshedPinnedApps();
+                  if (!context.mounted) return;
                   Navigator.pop(context);
                   refresh();
                 },
@@ -55,7 +55,9 @@ class AppDialogs {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: const Color.fromARGB(255, 106, 135, 149),
+        backgroundColor: Color(
+          0xFFCFCFCF,
+        ), //  const Color.fromARGB(255, 106, 135, 149),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20.0),
         ),
@@ -67,7 +69,6 @@ class AppDialogs {
               leading: const Icon(Icons.delete),
               title: const Text("Remove From Home"),
               onTap: () {
-                print("**********************************Select the option ");
                 InstalledAppsService.removePinned(app.packageName);
                 Navigator.pop(context);
                 refresh();
