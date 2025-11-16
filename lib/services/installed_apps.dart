@@ -1,4 +1,3 @@
-import 'package:permission_handler/permission_handler.dart';
 import 'package:installed_apps/installed_apps.dart';
 import 'package:installed_apps/app_info.dart';
 import 'dart:convert';
@@ -20,9 +19,9 @@ class InstalledAppsService {
         withIcon: false,
       );
       print('📱 Installed user apps:');
-      for (var app in installedApps) {
-        print('→ ${app.name} (${app.packageName})');
-      }
+      // for (var app in installedApps) {
+      //   print('→ ${app.name} (${app.packageName})');
+      // }
 
       print('✅ Total user apps found: ${installedApps.length}');
       return installedApps;
@@ -32,15 +31,24 @@ class InstalledAppsService {
     }
   }
 
+  // =====
   // Add App to Pinned Apps List..!!
+  // ====
+
   static Future<void> addToPinned(AppInfo app) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     List<String> pinnedApps = prefs.getStringList(_pinnedKey) ?? [];
 
     // Avoid duplicates
-    if (!pinnedApps.any((a) => jsonDecode(a)['package'] == app.packageName)) {
+    if (!pinnedApps.any(
+      (a) => jsonDecode(a)['packageName'] == app.packageName,
+    )) {
       pinnedApps.add(
-        jsonEncode({'name': app.name, 'package': app.packageName}),
+        jsonEncode({
+          "name": app.name,
+          "package": app.packageName,
+          "iconSlug": null,
+        }),
       );
       await prefs.setStringList(_pinnedKey, pinnedApps);
       print('📌 Pinned app: ${app.name}');
@@ -51,7 +59,7 @@ class InstalledAppsService {
   static Future<void> removePinned(String packageName) async {
     final prefs = await SharedPreferences.getInstance();
     List<String> pinnedApps = prefs.getStringList(_pinnedKey) ?? [];
-    pinnedApps.removeWhere((a) => jsonDecode(a)['package'] == packageName);
+    pinnedApps.removeWhere((a) => jsonDecode(a)['packageName'] == packageName);
     await prefs.setStringList(_pinnedKey, pinnedApps);
   }
 
@@ -62,13 +70,15 @@ class InstalledAppsService {
     List<String> pinnedApps = prefs.getStringList(_pinnedKey) ?? [];
 
     for (var item in pinnedApps) {
-      var data = jsonDecode(item);
       try {
-        var app = await InstalledApps.getAppInfo(data['package']);
+        final data = jsonDecode(item);
+        final app = await InstalledApps.getAppInfo(data["packageName"]);
         if (app != null) {
           pinnedAppList.add(app);
         }
-      } catch (_) {}
+      } catch (e) {
+        print("Error reading pinned app: $e");
+      }
     }
     return pinnedAppList;
   }
@@ -94,15 +104,35 @@ class InstalledAppsService {
     return jsonString;
   }
 
-  // pinned apps import json
-  static Future<String?> importPinnedApps(String jsonString) async {
+  // === IMPORT PINNED APPS ===
+  static Future<void> importPinnedApps(String jsonString) async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      List<dynamic> decode = jsonDecode(jsonString);
-      List<String> pinnedList = decode.map((e) => e.toString()).toList();
+      final decoded = jsonDecode(jsonString);
+      List<String> pinnedList = decoded
+          .map<String>((e) => jsonEncode(jsonDecode(e)))
+          .toList();
+
+      // List<String> pinnedList = jsonEncode(jsonDecode(e).map((e) => e.toString()).toList();
       await prefs.setStringList(_pinnedKey, pinnedList);
     } catch (e) {
       print("Error Importing pinned apps: $e");
+    }
+  }
+
+  static Future<void> printPinnedAppsPretty() async {
+    final prefs = await SharedPreferences.getInstance();
+    final pinned = prefs.getStringList(_pinnedKey) ?? [];
+
+    print("🟢 PINNED APPS (Parsed):");
+
+    for (var item in pinned) {
+      try {
+        final data = jsonDecode(item);
+        print("Package: ${data['packageName']}, Icon: ${data['iconSlug']}");
+      } catch (e) {
+        print("Invalid JSON: $item");
+      }
     }
   }
 }

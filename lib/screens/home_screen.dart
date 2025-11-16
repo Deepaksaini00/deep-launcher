@@ -1,6 +1,7 @@
 import 'package:android_launcher/icons/app_icons.dart';
 import 'package:android_launcher/services/global_actions.dart';
 import 'package:android_launcher/services/installed_apps.dart';
+import 'package:android_launcher/util/file_picker.dart';
 import 'package:android_launcher/widgets/dialog_box.dart';
 import 'package:flutter/material.dart';
 import 'package:installed_apps/app_info.dart';
@@ -31,12 +32,16 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     _loadApps();
+    InstalledAppsService.printPinnedAppsPretty();
   }
 
   void _loadApps() async {
     var apps = await InstalledAppsService.getInstalledApps();
     var pinned = await InstalledAppsService.getPinnedApps();
     apps.sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+    // final prefs = await SharedPreferences.getInstance();
+    // prefs.remove('pinned_apps');
+    // print("🗑️ Cleared old broken pinned apps");
     setState(() {
       installedApps = apps;
       filteredApps = apps;
@@ -196,8 +201,15 @@ class _HomeScreenState extends State<HomeScreen> {
                                     await InstalledAppsService.exportPinnedApps();
                                     break;
                                   case GlobalAction.importGridJson:
-                                    await InstalledAppsService.importPinnedApps();
-                                    _loadApps();
+                                    final jsonFile =
+                                        await GridAppPicker.pickJsonFile();
+                                    if (jsonFile != null) {
+                                      await InstalledAppsService.importPinnedApps(
+                                        jsonFile,
+                                      );
+                                      _loadApps();
+                                    }
+
                                     break;
                                   case GlobalAction.changeTheme:
                                     // await showThemePicker(context);
@@ -229,7 +241,7 @@ class _HomeScreenState extends State<HomeScreen> {
               right: 0,
               bottom: 80,
               child: Container(
-                color: Color(0xFF0F1724),
+                color: Color.fromARGB(255, 248, 240, 217),
                 child: ListView.builder(
                   padding: const EdgeInsets.only(bottom: 30),
                   itemCount: filteredApps.length,
@@ -238,7 +250,9 @@ class _HomeScreenState extends State<HomeScreen> {
                     return ListTile(
                       title: Text(
                         app.name,
-                        style: const TextStyle(color: Color(0xFFFFFFFF)),
+                        style: const TextStyle(
+                          color: Color.fromARGB(255, 2, 2, 2),
+                        ),
                       ),
                       onTap: () async {
                         await InstalledApps.startApp(app.packageName);
