@@ -38,18 +38,17 @@ class InstalledAppsService {
   static Future<void> addToPinned(AppInfo app) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     List<String> pinnedApps = prefs.getStringList(_pinnedKey) ?? [];
+    final jsonItem = {
+      "packageName": app.packageName,
+      "name": app.name,
+      "iconSlug": null,
+    };
 
     // Avoid duplicates
     if (!pinnedApps.any(
       (a) => jsonDecode(a)['packageName'] == app.packageName,
     )) {
-      pinnedApps.add(
-        jsonEncode({
-          "name": app.name,
-          "package": app.packageName,
-          "iconSlug": null,
-        }),
-      );
+      pinnedApps.add(jsonEncode(jsonItem));
       await prefs.setStringList(_pinnedKey, pinnedApps);
       print('📌 Pinned app: ${app.name}');
     }
@@ -61,6 +60,7 @@ class InstalledAppsService {
     List<String> pinnedApps = prefs.getStringList(_pinnedKey) ?? [];
     pinnedApps.removeWhere((a) => jsonDecode(a)['packageName'] == packageName);
     await prefs.setStringList(_pinnedKey, pinnedApps);
+    print("🗑 Removed $packageName");
   }
 
   // Get all Pinned Apps...!!
@@ -72,12 +72,17 @@ class InstalledAppsService {
     for (var item in pinnedApps) {
       try {
         final data = jsonDecode(item);
+        if (data['packageName'] == null) {
+          print("~~ ❌ Invalid entry (missing packageName): $data");
+          continue;
+        }
+
         final app = await InstalledApps.getAppInfo(data["packageName"]);
         if (app != null) {
           pinnedAppList.add(app);
         }
       } catch (e) {
-        print("Error reading pinned app: $e");
+        print(">>> ❌ JSON error: $e → $item");
       }
     }
     return pinnedAppList;
@@ -101,7 +106,7 @@ class InstalledAppsService {
     List<String> pinnedApps = prefs.getStringList(_pinnedKey) ?? [];
     if (pinnedApps.isEmpty) return null;
     final jsonString = jsonEncode(pinnedApps);
-    return jsonString;
+    return jsonEncode(pinnedApps);
   }
 
   // === IMPORT PINNED APPS ===
@@ -109,14 +114,27 @@ class InstalledAppsService {
     try {
       final prefs = await SharedPreferences.getInstance();
       final decoded = jsonDecode(jsonString);
-      List<String> pinnedList = decoded
-          .map<String>((e) => jsonEncode(jsonDecode(e)))
-          .toList();
+      List<String> cleanList = decoded.map<String>((e) {
+        final obj = jsonDecode(e);
 
-      // List<String> pinnedList = jsonEncode(jsonDecode(e).map((e) => e.toString()).toList();
-      await prefs.setStringList(_pinnedKey, pinnedList);
+        return jsonEncode({
+          "packageName": obj["packageName"],
+          "name": obj["name"] ?? "",
+          "iconSlug": obj["iconSlug"],
+        });
+      }).toList();
+
+      await prefs.setStringList(_pinnedKey, cleanList);
+      print("📥 Imported ${cleanList.length} pinned apps");
+
+      // List<String> pinnedList = decoded
+      //     .map<String>((e) => jsonEncode(jsonDecode(e)))
+      //     .toList();
+
+      // // List<String> pinnedList = jsonEncode(jsonDecode(e).map((e) => e.toString()).toList();
+      // await prefs.setStringList(_pinnedKey, pinnedList);
     } catch (e) {
-      print("Error Importing pinned apps: $e");
+      print("<<<< Error Importing pinned apps: $e");
     }
   }
 
@@ -131,7 +149,7 @@ class InstalledAppsService {
         final data = jsonDecode(item);
         print("Package: ${data['packageName']}, Icon: ${data['iconSlug']}");
       } catch (e) {
-        print("Invalid JSON: $item");
+        print("--- Invalid JSON: $item");
       }
     }
   }

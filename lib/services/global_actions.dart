@@ -11,21 +11,41 @@ Future<GlobalAction?> askGlobalAction(BuildContext context) async {
         children: [
           SimpleDialogOption(
             onPressed: () => Navigator.pop(context, GlobalAction.refreshApps),
-            child: const Text('Refresh Apps'),
+            child: Text(
+              "Refresh Apps",
+              style: TextStyle(
+                color: Theme.of(context).textTheme.bodyMedium?.color,
+              ),
+            ),
           ),
           SimpleDialogOption(
             onPressed: () =>
                 Navigator.pop(context, GlobalAction.exportGridJson),
-            child: const Text('Export Grid JSON'),
+            child: Text(
+              "Export Grid JSON",
+              style: TextStyle(
+                color: Theme.of(context).textTheme.bodyMedium?.color,
+              ),
+            ),
           ),
           SimpleDialogOption(
             onPressed: () =>
                 Navigator.pop(context, GlobalAction.importGridJson),
-            child: const Text('Import Grid JSON'),
+            child: Text(
+              "Import Grid JSON",
+              style: TextStyle(
+                color: Theme.of(context).textTheme.bodyMedium?.color,
+              ),
+            ),
           ),
           SimpleDialogOption(
             onPressed: () => Navigator.pop(context, GlobalAction.changeTheme),
-            child: const Text('Change Theme'),
+            child: Text(
+              "Change Theme",
+              style: TextStyle(
+                color: Theme.of(context).textTheme.bodyMedium?.color,
+              ),
+            ),
           ),
         ],
       );

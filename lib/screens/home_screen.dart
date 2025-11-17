@@ -3,9 +3,11 @@ import 'package:android_launcher/services/global_actions.dart';
 import 'package:android_launcher/services/installed_apps.dart';
 import 'package:android_launcher/util/file_picker.dart';
 import 'package:android_launcher/widgets/dialog_box.dart';
+import 'package:android_launcher/widgets/theme_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:installed_apps/app_info.dart';
 import 'package:installed_apps/installed_apps.dart';
+// import 'package:shared_preferences/shared_preferences.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -47,6 +49,7 @@ class _HomeScreenState extends State<HomeScreen> {
       filteredApps = apps;
       pinnedApps = pinned;
     });
+    print("====  _laodApps Refresh ===== ");
   }
 
   Widget buildTile(AppInfo app) {
@@ -69,7 +72,7 @@ class _HomeScreenState extends State<HomeScreen> {
               Icon(
                 iconToShow,
                 size: 50,
-                color: Color.fromARGB(255, 43, 55, 59),
+                // color: Color.fromARGB(255, 43, 55, 59),
               ),
               const SizedBox(height: 6),
             ],
@@ -82,7 +85,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color.fromARGB(255, 248, 240, 217),
+      // backgroundColor: Color.fromARGB(255, 248, 240, 217),
       body: Stack(
         children: [
           Column(
@@ -173,14 +176,14 @@ class _HomeScreenState extends State<HomeScreen> {
                                         child: Icon(
                                           Icons.arrow_back,
                                           color: Colors.black,
-                                          size: 26, // adjust as needed
+                                          size: 28, // adjust as needed
                                         ),
                                       ),
                                     ),
                                   )
                                 : const SizedBox(width: 40),
 
-                            hintText: 'Search App ${installedApps.length}',
+                            hintText: 'Search Apps ${installedApps.length}',
                             hintStyle: TextStyle(
                               color: const Color.fromARGB(230, 28, 28, 28),
                               fontSize: 16,
@@ -212,7 +215,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
                                     break;
                                   case GlobalAction.changeTheme:
-                                    // await showThemePicker(context);
+                                    await showThemePickerDialog(context);
                                     break;
                                   default:
                                     break;
@@ -241,7 +244,7 @@ class _HomeScreenState extends State<HomeScreen> {
               right: 0,
               bottom: 80,
               child: Container(
-                color: Color.fromARGB(255, 248, 240, 217),
+                color: Theme.of(context).scaffoldBackgroundColor,
                 child: ListView.builder(
                   padding: const EdgeInsets.only(bottom: 30),
                   itemCount: filteredApps.length,
@@ -250,8 +253,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     return ListTile(
                       title: Text(
                         app.name,
-                        style: const TextStyle(
-                          color: Color.fromARGB(255, 2, 2, 2),
+                        style: TextStyle(
+                          color: Theme.of(context).textTheme.bodyMedium?.color,
                         ),
                       ),
                       onTap: () async {

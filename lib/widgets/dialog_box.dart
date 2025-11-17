@@ -11,7 +11,7 @@ class AppDialogs {
       context: context,
       builder: (context) {
         return AlertDialog(
-          backgroundColor: const Color.fromARGB(255, 106, 135, 149),
+          // backgroundColor: const Color.fromARGB(255, 106, 135, 149),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20.0),
           ),
@@ -21,7 +21,12 @@ class AppDialogs {
             children: [
               ListTile(
                 leading: const Icon(Icons.add_box_outlined),
-                title: const Text("Add To Main Grid"),
+                title: Text(
+                  "Add To Main Grid",
+                  style: TextStyle(
+                    color: Theme.of(context).textTheme.bodyMedium?.color,
+                  ),
+                ),
                 onTap: () async {
                   await InstalledAppsService.addToPinned(app);
                   if (!context.mounted) return;
@@ -32,7 +37,12 @@ class AppDialogs {
               // const Divider(),
               ListTile(
                 leading: const Icon(Icons.app_settings_alt_outlined),
-                title: const Text("Open App Setting"),
+                title: Text(
+                  "Open App Setting",
+                  style: TextStyle(
+                    color: Theme.of(context).textTheme.bodyMedium?.color,
+                  ),
+                ),
                 onTap: () async {
                   InstalledApps.openSettings(app.packageName);
                   Navigator.pop(context);
@@ -54,9 +64,9 @@ class AppDialogs {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: Color(
-          0xFFCFCFCF,
-        ), //  const Color.fromARGB(255, 106, 135, 149),
+        // backgroundColor: Color(
+        // 0xFFCFCFCF,
+        // ), //  const Color.fromARGB(255, 106, 135, 149),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20.0),
         ),
@@ -66,7 +76,12 @@ class AppDialogs {
           children: [
             ListTile(
               leading: const Icon(Icons.delete),
-              title: const Text("Remove From Home"),
+              title: Text(
+                "Remove From Home",
+                style: TextStyle(
+                  color: Theme.of(context).textTheme.bodyMedium?.color,
+                ),
+              ),
               onTap: () {
                 InstalledAppsService.removePinned(app.packageName);
                 Navigator.pop(context);
@@ -76,7 +91,12 @@ class AppDialogs {
             // const Divider(),
             ListTile(
               leading: const Icon(Icons.image),
-              title: const Text("Select Icon"),
+              title: Text(
+                "Select Icon",
+                style: TextStyle(
+                  color: Theme.of(context).textTheme.bodyMedium?.color,
+                ),
+              ),
               onTap: () async {
                 Navigator.pop(context);
                 AppDialogs.iconDialogBox(context, app, refresh);
@@ -139,7 +159,7 @@ class AppDialogs {
                           prefixIcon: const Icon(Icons.search),
                           hintText: "Search",
                           filled: true,
-                          fillColor: Colors.grey.shade200,
+                          fillColor: const Color.fromARGB(255, 212, 211, 211),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                             borderSide: BorderSide.none,
@@ -176,7 +196,7 @@ class AppDialogs {
                               child: Icon(
                                 entry.value,
                                 size: 30,
-                                color: const Color.fromARGB(221, 0, 0, 0),
+                                // color: const Color.fromARGB(221, 0, 0, 0),
                               ),
                             );
                           },
@@ -190,7 +210,7 @@ class AppDialogs {
                         child: const Text(
                           "Close",
                           style: TextStyle(
-                            color: Color.fromARGB(255, 23, 145, 246),
+                            color: Color.fromARGB(255, 181, 18, 0),
                           ),
                         ),
                         onPressed: () => Navigator.pop(context),
