@@ -19,10 +19,6 @@ class InstalledAppsService {
         withIcon: false,
       );
       print('📱 Installed user apps:');
-      // for (var app in installedApps) {
-      //   print('→ ${app.name} (${app.packageName})');
-      // }
-
       print('✅ Total user apps found: ${installedApps.length}');
       return installedApps;
     } catch (e) {
@@ -105,8 +101,11 @@ class InstalledAppsService {
     final prefs = await SharedPreferences.getInstance();
     List<String> pinnedApps = prefs.getStringList(_pinnedKey) ?? [];
     if (pinnedApps.isEmpty) return null;
-    final jsonString = jsonEncode(pinnedApps);
-    return jsonEncode(pinnedApps);
+    List<Map<String, dynamic>> data = pinnedApps
+        .map((e) => jsonDecode(e) as Map<String, dynamic>)
+        .toList();
+    // final jsonString = jsonEncode(pinnedApps);
+    return jsonEncode(data);
   }
 
   // === IMPORT PINNED APPS ===
@@ -114,25 +113,23 @@ class InstalledAppsService {
     try {
       final prefs = await SharedPreferences.getInstance();
       final decoded = jsonDecode(jsonString);
-      List<String> cleanList = decoded.map<String>((e) {
-        final obj = jsonDecode(e);
+      // decoded must be a List of objects
+      if (decoded is! List) {
+        print("❌ Imported JSON is not a list");
+        return;
+      }
+      List<String> newList = decoded.map<String>((map) {
+        // final obj = jsonDecode(e);
 
         return jsonEncode({
-          "packageName": obj["packageName"],
-          "name": obj["name"] ?? "",
-          "iconSlug": obj["iconSlug"],
+          "packageName": map["packageName"],
+          "name": map["name"] ?? "",
+          "iconSlug": map["iconSlug"],
         });
       }).toList();
 
-      await prefs.setStringList(_pinnedKey, cleanList);
-      print("📥 Imported ${cleanList.length} pinned apps");
-
-      // List<String> pinnedList = decoded
-      //     .map<String>((e) => jsonEncode(jsonDecode(e)))
-      //     .toList();
-
-      // // List<String> pinnedList = jsonEncode(jsonDecode(e).map((e) => e.toString()).toList();
-      // await prefs.setStringList(_pinnedKey, pinnedList);
+      await prefs.setStringList(_pinnedKey, newList);
+      print("📥 Imported ${newList.length} pinned apps");
     } catch (e) {
       print("<<<< Error Importing pinned apps: $e");
     }

@@ -24,7 +24,6 @@ class MyApp extends StatelessWidget {
             scaffoldBackgroundColor: them.background,
             dialogTheme: DialogThemeData(backgroundColor: them.dialogColor),
 
-            // dialogBackgroundColor: them.dialogColor,
             textTheme: Theme.of(context).textTheme.apply(
               bodyColor: them.textColor,
               displayColor: them.textColor,
@@ -35,11 +34,5 @@ class MyApp extends StatelessWidget {
         );
       },
     );
-
-    // return MaterialApp(
-    //   debugShowCheckedModeBanner: false,
-    //   title: 'Deep Launcher',
-    //   home: HomeScreen(),
-    // );
   }
 }

@@ -7,7 +7,6 @@ import 'package:android_launcher/widgets/theme_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:installed_apps/app_info.dart';
 import 'package:installed_apps/installed_apps.dart';
-// import 'package:shared_preferences/shared_preferences.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -49,7 +48,6 @@ class _HomeScreenState extends State<HomeScreen> {
       filteredApps = apps;
       pinnedApps = pinned;
     });
-    print("====  _laodApps Refresh ===== ");
   }
 
   Widget buildTile(AppInfo app) {
@@ -57,9 +55,9 @@ class _HomeScreenState extends State<HomeScreen> {
       future: InstalledAppsService.getSavedIcon(app.packageName),
       builder: (context, snapshot) {
         String? iconKey = snapshot.data;
-        IconData iconToShow = iconKey != null ? icons[iconKey]! : defaultIcon;
-
-        return GestureDetector(
+        IconData iconToShow = icons[iconKey] ?? defaultIcon;
+        return InkWell(
+          borderRadius: BorderRadius.circular(20),
           onTap: () async => await InstalledApps.startApp(app.packageName),
 
           onLongPress: () {
@@ -68,14 +66,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                iconToShow,
-                size: 50,
-                // color: Color.fromARGB(255, 43, 55, 59),
-              ),
-              const SizedBox(height: 6),
-            ],
+            children: [Icon(iconToShow, size: 45), const SizedBox(height: 6)],
           ),
         );
       },
@@ -85,7 +76,17 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // backgroundColor: Color.fromARGB(255, 248, 240, 217),
+      appBar: AppBar(
+        toolbarHeight: -2,
+        backgroundColor: const Color.fromARGB(
+          255,
+          124,
+          123,
+          123,
+          // ignore: deprecated_member_use
+        ).withOpacity(0.45),
+        elevation: 0,
+      ),
       body: Stack(
         children: [
           Column(
@@ -99,8 +100,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     padding: const EdgeInsets.only(
                       left: 20,
                       right: 20,
-                      bottom: 20,
-                      top: 55,
+                      // bottom: 10,
+                      top: 30,
                     ),
                     crossAxisSpacing: 10,
                     mainAxisSpacing: 10,
@@ -144,7 +145,6 @@ class _HomeScreenState extends State<HomeScreen> {
                             if (!isSearching) {
                               setState(() => isSearching = true);
                             }
-                            // setState(() => isSearching = true);
                           },
                           // Filter the apps ...
                           onChanged: (query) {
@@ -201,7 +201,13 @@ class _HomeScreenState extends State<HomeScreen> {
                                     _loadApps();
                                     break;
                                   case GlobalAction.exportGridJson:
-                                    await InstalledAppsService.exportPinnedApps();
+                                    final String? json =
+                                        await InstalledAppsService.exportPinnedApps();
+                                    if (json != null) {
+                                      await GridAppPicker.saveFileToLocalStorage(
+                                        json,
+                                      );
+                                    }
                                     break;
                                   case GlobalAction.importGridJson:
                                     final jsonFile =

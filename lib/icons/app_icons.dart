@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 const icons = {
   // ==== App / Utility Icons ====
-  'settings': Icons.settings_outlined,
   'flashlight': Icons.flashlight_on_outlined,
   'file': Icons.insert_drive_file_outlined,
   'security': Icons.security_outlined,
@@ -49,7 +48,6 @@ const icons = {
   // ==== System Status ====
   'storage': Icons.storage_outlined,
   'update': Icons.system_update_outlined,
-  'info': Icons.info_outline,
   'qr_code': Icons.qr_code_2_outlined,
 
   // ==== Browsers & Internet ====
@@ -58,24 +56,36 @@ const icons = {
   'language': Icons.language,
 
   // ==== Entertainment ====
-  'music_note': Icons.music_note,
   'star': Icons.star_border_outlined,
-  'facebook': Icons.facebook,
   "instagram": Icons.camera_alt,
   "yt": Icons.play_circle_fill,
 
   // ==== Documents ====
-  'document_scanner': Icons.document_scanner_outlined,
   'description': Icons.description_outlined,
-  "todo_list": Icons.checklist,
   "task_done": Icons.task_alt,
-  "event": Icons.event_note,
   // === General =====
   'camera': Icons.camera_outlined,
   'call': Icons.call_outlined,
   'map': Icons.map_outlined,
   'folder': Icons.folder_outlined,
   'calendar': Icons.calendar_month_outlined,
+
+  'photo_camera': Icons.photo_camera_outlined,
+  'credit_card': Icons.credit_card_outlined,
+  'payments': Icons.payments_outlined,
+  'payment': Icons.payment_outlined,
+  'wb_twilight': Icons.wb_twilight_outlined,
+  'fitbit': Icons.fitbit,
+  'history_edu': Icons.history_edu_outlined,
+  'sync': Icons.sync,
+  'sync_alt': Icons.sync_alt,
+  'place': Icons.place_outlined,
+  'web': Icons.web_outlined,
+  'calendar_today': Icons.calendar_today_outlined,
+  'date_range': Icons.date_range_outlined,
+  'calculate': Icons.calculate_outlined,
+  'schedule': Icons.schedule_outlined,
+  'folder_copy': Icons.folder_copy,
 };
 
 String? iconDataToName(IconData icon) {

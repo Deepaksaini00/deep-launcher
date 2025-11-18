@@ -54,7 +54,7 @@ class ThemeService extends ChangeNotifier {
       background: Color.fromARGB(255, 99, 64, 46),
       iconColor: Color.fromARGB(255, 231, 245, 255),
       textColor: Color.fromARGB(255, 219, 225, 230),
-      dialogColor: Color(0xFFFFE0B2),
+      dialogColor: Color.fromARGB(255, 88, 68, 38),
     ),
     AppTheme(
       id: 'green',

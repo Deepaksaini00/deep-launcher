@@ -1,3 +1,5 @@
+//  --- Theme picker show the Dialog Box to select a theme only shows the background color of theme ---
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../services/theme_service.dart';
@@ -26,7 +28,6 @@ Future<void> showThemePickerDialog(BuildContext context) async {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    // circle showing the background color only
                     Container(
                       width: 70,
                       height: 66,
