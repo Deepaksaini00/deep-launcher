@@ -5,25 +5,19 @@ const icons = {
   'flashlight': Icons.flashlight_on_outlined,
   'file': Icons.insert_drive_file_outlined,
   'security': Icons.security_outlined,
-  'share': Icons.share_outlined,
-
   // ==== Social / Communication ====
   'message': Icons.message_outlined,
   'chat': Icons.chat_bubble_outline,
   'mail': Icons.mail_outline,
   'people': Icons.people_outline,
-  'group': Icons.groups_outlined,
   'notifications': Icons.notifications_none,
 
   // ==== Media ====
   'video': Icons.videocam_outlined,
   'gallery': Icons.photo_library_outlined,
-  'movie': Icons.movie_outlined,
   'game': Icons.sports_esports_outlined,
   'mic': Icons.mic_none_outlined,
   "podcast": Icons.podcasts,
-  "radio": Icons.radio,
-  "audio": Icons.audiotrack,
   "music": Icons.music_note,
 
   // ==== Tools ====
@@ -47,16 +41,12 @@ const icons = {
 
   // ==== System Status ====
   'storage': Icons.storage_outlined,
-  'update': Icons.system_update_outlined,
-  'qr_code': Icons.qr_code_2_outlined,
 
   // ==== Browsers & Internet ====
   'search': Icons.search_outlined,
-  'public': Icons.public_outlined,
   'language': Icons.language,
 
   // ==== Entertainment ====
-  'star': Icons.star_border_outlined,
   "instagram": Icons.camera_alt,
   "yt": Icons.play_circle_fill,
 
@@ -83,7 +73,6 @@ const icons = {
   'web': Icons.web_outlined,
   'calendar_today': Icons.calendar_today_outlined,
   'date_range': Icons.date_range_outlined,
-  'calculate': Icons.calculate_outlined,
   'schedule': Icons.schedule_outlined,
   'folder_copy': Icons.folder_copy,
 };

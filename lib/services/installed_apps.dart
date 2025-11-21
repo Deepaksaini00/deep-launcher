@@ -8,6 +8,8 @@ class InstalledAppsService {
 
   static const _pinnedKey = 'pinned_apps';
 
+  static List<AppInfo> _cachedPinnedApps = [];
+  static Map<String, String?> _cachedIcons = {};
   // Fetch and print Installed apps...
 
   static Future<List<AppInfo>> getInstalledApps() async {
@@ -39,13 +41,13 @@ class InstalledAppsService {
       "name": app.name,
       "iconSlug": null,
     };
-
     // Avoid duplicates
     if (!pinnedApps.any(
       (a) => jsonDecode(a)['packageName'] == app.packageName,
     )) {
       pinnedApps.add(jsonEncode(jsonItem));
       await prefs.setStringList(_pinnedKey, pinnedApps);
+      _cachedPinnedApps.add(app);
       print('📌 Pinned app: ${app.name}');
     }
   }
@@ -56,11 +58,15 @@ class InstalledAppsService {
     List<String> pinnedApps = prefs.getStringList(_pinnedKey) ?? [];
     pinnedApps.removeWhere((a) => jsonDecode(a)['packageName'] == packageName);
     await prefs.setStringList(_pinnedKey, pinnedApps);
+    _cachedPinnedApps.removeWhere((a) => a.packageName == packageName);
     print("🗑 Removed $packageName");
   }
 
   // Get all Pinned Apps...!!
   static Future<List<AppInfo>> getPinnedApps() async {
+    if (_cachedPinnedApps.isNotEmpty) {
+      return _cachedPinnedApps;
+    }
     List<AppInfo> pinnedAppList = [];
     final prefs = await SharedPreferences.getInstance();
     List<String> pinnedApps = prefs.getStringList(_pinnedKey) ?? [];
@@ -81,6 +87,7 @@ class InstalledAppsService {
         print(">>> ❌ JSON error: $e → $item");
       }
     }
+    _cachedPinnedApps = pinnedAppList;
     return pinnedAppList;
   }
 
@@ -88,12 +95,23 @@ class InstalledAppsService {
   static Future<void> saveIcons(String packageName, String iconKey) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(packageName, iconKey);
+    _cachedIcons[packageName] = iconKey;
   }
 
   // Load icons
   static Future<String?> getSavedIcon(String packageName) async {
+    if (_cachedIcons.containsKey(packageName)) {
+      return _cachedIcons[packageName];
+    }
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getString(packageName);
+    final key = prefs.getString(packageName);
+    _cachedIcons[packageName] = key;
+    return key;
+    // return prefs.getString(packageName);
+  }
+
+  static String? getSavedIconSync(String packageName) {
+    return _cachedIcons[packageName];
   }
 
   // Pinned Apps Export Json
@@ -130,6 +148,8 @@ class InstalledAppsService {
 
       await prefs.setStringList(_pinnedKey, newList);
       print("📥 Imported ${newList.length} pinned apps");
+      _cachedPinnedApps = [];
+      _cachedIcons.clear();
     } catch (e) {
       print("<<<< Error Importing pinned apps: $e");
     }

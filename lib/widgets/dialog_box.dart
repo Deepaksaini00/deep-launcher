@@ -31,7 +31,7 @@ class AppDialogs {
                   await InstalledAppsService.addToPinned(app);
                   if (!context.mounted) return;
                   Navigator.pop(context);
-                  refresh();
+                  await refresh();
                 },
               ),
               // const Divider(),
@@ -60,6 +60,7 @@ class AppDialogs {
     BuildContext context,
     AppInfo app,
     VoidCallback refresh,
+    void Function(String) removeFromPinnedCache,
   ) {
     showDialog(
       context: context,
@@ -82,10 +83,12 @@ class AppDialogs {
                   color: Theme.of(context).textTheme.bodyMedium?.color,
                 ),
               ),
-              onTap: () {
-                InstalledAppsService.removePinned(app.packageName);
+              onTap: () async {
+                await InstalledAppsService.removePinned(app.packageName);
+                removeFromPinnedCache(app.packageName);
                 Navigator.pop(context);
-                refresh();
+
+                // refresh();
               },
             ),
             // const Divider(),

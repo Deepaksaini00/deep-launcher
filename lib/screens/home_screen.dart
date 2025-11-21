@@ -16,6 +16,7 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  Map<String, String?> iconKeyCache = {};
   bool isSearching = false;
   // Store Icons for 12 apps...
   List<IconData?> homeIcons = List.filled(12, null);
@@ -28,6 +29,13 @@ class _HomeScreenState extends State<HomeScreen> {
   List<AppInfo> installedApps = [];
   List<AppInfo> filteredApps = [];
   List<AppInfo> pinnedApps = [];
+
+  void removeFromPinnedCache(String packageName) {
+    setState(() {
+      pinnedApps.removeWhere((a) => a.packageName == packageName);
+      iconKeyCache.remove(packageName);
+    });
+  }
 
   @override
   void initState() {
@@ -43,6 +51,9 @@ class _HomeScreenState extends State<HomeScreen> {
     // final prefs = await SharedPreferences.getInstance();
     // prefs.remove('pinned_apps');
     // print("🗑️ Cleared old broken pinned apps");
+    for (final app in pinned) {
+      await InstalledAppsService.getSavedIcon(app.packageName);
+    }
     setState(() {
       installedApps = apps;
       filteredApps = apps;
@@ -51,26 +62,33 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget buildTile(AppInfo app) {
-    return FutureBuilder<String?>(
-      future: InstalledAppsService.getSavedIcon(app.packageName),
-      builder: (context, snapshot) {
-        String? iconKey = snapshot.data;
-        IconData iconToShow = icons[iconKey] ?? defaultIcon;
-        return InkWell(
-          borderRadius: BorderRadius.circular(20),
-          onTap: () async => await InstalledApps.startApp(app.packageName),
+    String? iconKey = InstalledAppsService.getSavedIconSync(app.packageName);
+    IconData iconToShow = icons[iconKey] ?? defaultIcon;
+    // return FutureBuilder<String?>(
+    //   future: InstalledAppsService.getSavedIcon(app.packageName),
+    //   builder: (context, snapshot) {
+    //     String? iconKey = snapshot.data;
+    //     IconData iconToShow = icons[iconKey] ?? defaultIcon;
+    return InkWell(
+      borderRadius: BorderRadius.circular(20),
+      onTap: () async => await InstalledApps.startApp(app.packageName),
 
-          onLongPress: () {
-            AppDialogs.pinnedDialogBox(context, app, _loadApps);
-          },
-
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [Icon(iconToShow, size: 45), const SizedBox(height: 6)],
-          ),
+      onLongPress: () {
+        AppDialogs.pinnedDialogBox(
+          context,
+          app,
+          _loadApps,
+          removeFromPinnedCache,
         );
       },
+
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [Icon(iconToShow, size: 45), const SizedBox(height: 6)],
+      ),
     );
+    // },
+    // );
   }
 
   @override
@@ -94,25 +112,47 @@ class _HomeScreenState extends State<HomeScreen> {
               // 1️⃣ GridView (center of screen) >>>>
               Expanded(
                 child: Center(
-                  child: GridView.count(
-                    crossAxisCount: 2,
-                    primary: false,
+                  child: GridView.builder(
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          crossAxisSpacing: 10,
+                          mainAxisSpacing: 10,
+                          childAspectRatio: 1.5,
+                        ),
                     padding: const EdgeInsets.only(
                       left: 20,
                       right: 20,
-                      // bottom: 10,
                       top: 30,
                     ),
-                    crossAxisSpacing: 10,
-                    mainAxisSpacing: 10,
-                    physics: NeverScrollableScrollPhysics(),
-                    childAspectRatio: 1.5,
-                    children: List.generate(pinnedApps.length, (index) {
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: pinnedApps.length,
+                    itemBuilder: (context, index) {
                       final app = pinnedApps[index];
                       return buildTile(app);
-                    }),
+                    },
                   ),
                 ),
+                // child: Center(
+                //   child: GridView.count(
+                //     crossAxisCount: 2,
+                //     primary: false,
+                //     padding: const EdgeInsets.only(
+                //       left: 20,
+                //       right: 20,
+                //       // bottom: 10,
+                //       top: 30,
+                //     ),
+                //     crossAxisSpacing: 10,
+                //     mainAxisSpacing: 10,
+                //     physics: NeverScrollableScrollPhysics(),
+                //     childAspectRatio: 1.5,
+                //     children: List.generate(pinnedApps.length, (index) {
+                //       final app = pinnedApps[index];
+                //       return buildTile(app);
+                //     }),
+                //   ),
+                // ),
               ),
 
               // 2️⃣ Search bar + 3-dot button (bottom) >>>>>
@@ -140,7 +180,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         child: TextField(
                           controller: searchController,
                           autofocus: false,
-                          focusNode: FocusNode(skipTraversal: true),
+                          // focusNode: FocusNode(skipTraversal: true),
                           onTap: () {
                             if (!isSearching) {
                               setState(() => isSearching = true);
@@ -163,11 +203,19 @@ class _HomeScreenState extends State<HomeScreen> {
                             prefixIcon: isSearching
                                 ? GestureDetector(
                                     onTap: () {
-                                      FocusScope.of(context).unfocus();
-                                      setState(() {
-                                        isSearching = false;
-                                        searchController.clear();
-                                      });
+                                      FocusManager.instance.primaryFocus
+                                          ?.unfocus();
+                                      // FocusScope.of(context).unfocus();
+                                      Future.delayed(
+                                        Duration(microseconds: 100),
+                                        () {
+                                          setState(() {
+                                            isSearching = false;
+                                            searchController.clear();
+                                            filteredApps = installedApps;
+                                          });
+                                        },
+                                      );
                                     },
                                     child: const SizedBox(
                                       width:
@@ -245,7 +293,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
           if (isSearching)
             Positioned(
-              top: 60,
+              top: 40,
               left: 10,
               right: 0,
               bottom: 80,
