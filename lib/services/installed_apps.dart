@@ -96,6 +96,24 @@ class InstalledAppsService {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(packageName, iconKey);
     _cachedIcons[packageName] = iconKey;
+    List<String> pinnedApps = prefs.getStringList(_pinnedKey) ?? [];
+    bool changed = false;
+    for (int i = 0; i < pinnedApps.length; i++) {
+      try {
+        final map = jsonDecode(pinnedApps[i]) as Map<String, dynamic>;
+        if (map['packageName'] == packageName) {
+          map['iconSlug'] = iconKey;
+          pinnedApps[i] = jsonEncode(map);
+          changed = true;
+          break;
+        }
+      } catch (e) {
+        // ignore invalid entries
+      }
+    }
+    if (changed) {
+      await prefs.setStringList(_pinnedKey, pinnedApps);
+    }
   }
 
   // Load icons
@@ -150,6 +168,22 @@ class InstalledAppsService {
       print("📥 Imported ${newList.length} pinned apps");
       _cachedPinnedApps = [];
       _cachedIcons.clear();
+      for (var item in newList) {
+        try {
+          final data = jsonDecode(item);
+          final packageName = data['packageName'];
+          final iconSlug = await prefs.getString(packageName);
+          if (iconSlug != null) {
+            _cachedIcons[packageName] = iconSlug;
+          } else if (data['iconSlug'] != null) {
+            // Save the iconSlug into SharedPreferences for consistency
+            await prefs.setString(packageName, data['iconSlug']);
+            _cachedIcons[packageName] = data['iconSlug'];
+          }
+        } catch (e) {
+          //ignore errors....
+        }
+      }
     } catch (e) {
       print("<<<< Error Importing pinned apps: $e");
     }

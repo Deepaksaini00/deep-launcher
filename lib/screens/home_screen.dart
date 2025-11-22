@@ -312,6 +312,10 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                       ),
                       onTap: () async {
+                        setState(() {
+                          searchController.clear();
+                          filteredApps = installedApps;
+                        });
                         await InstalledApps.startApp(app.packageName);
                       },
                       onLongPress: () {
