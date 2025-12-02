@@ -6,7 +6,12 @@ import 'package:installed_apps/installed_apps.dart';
 
 class AppDialogs {
   // 1️⃣ App Drawer Dialog
-  static void appDialogBox(BuildContext context, AppInfo app, refresh) {
+  static void appDialogBox(
+    BuildContext context,
+    AppInfo app,
+    refresh,
+    void Function(AppInfo) addToDisplayCache,
+  ) {
     showDialog(
       context: context,
       builder: (context) {
@@ -32,7 +37,7 @@ class AppDialogs {
                   // InstalledAppsService.addToPinnedCache(app);
                   if (!context.mounted) return;
                   Navigator.pop(context);
-                  await refresh();
+                  addToDisplayCache(app);
                 },
               ),
               // const Divider(),

@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:android_launcher/icons/app_icons.dart';
 import 'package:android_launcher/services/global_actions.dart';
 import 'package:android_launcher/services/installed_apps.dart';
@@ -19,7 +21,6 @@ class _HomeScreenState extends State<HomeScreen>
     with AutomaticKeepAliveClientMixin {
   Map<String, String?> iconKeyCache = {};
   bool isSearching = false;
-  bool _appsLoadedOnce = false;
   // Store Icons for 12 apps...
   List<IconData?> homeIcons = List.filled(12, null);
   IconData defaultIcon = Icons.apps;
@@ -31,10 +32,12 @@ class _HomeScreenState extends State<HomeScreen>
   List<AppInfo> installedApps = [];
   List<AppInfo> filteredApps = [];
   List<AppInfo> pinnedApps = [];
+  List<AppInfo> _displayPinnedApps = [];
 
   void removeFromPinnedCache(String packageName) {
     setState(() {
       pinnedApps.removeWhere((a) => a.packageName == packageName);
+      _displayPinnedApps.removeWhere((a) => a.packageName == packageName);
       iconKeyCache.remove(packageName);
     });
   }
@@ -43,7 +46,6 @@ class _HomeScreenState extends State<HomeScreen>
   void initState() {
     super.initState();
     _loadApps();
-    _appsLoadedOnce = true;
     InstalledAppsService.printPinnedAppsPretty();
   }
 
@@ -64,7 +66,20 @@ class _HomeScreenState extends State<HomeScreen>
       installedApps = apps;
       filteredApps = apps;
       pinnedApps = pinned;
+
+      if (_displayPinnedApps.length != pinned.length ||
+          !_listMatch(_displayPinnedApps, pinned)) {
+        _displayPinnedApps = List.from(pinned);
+      }
     });
+  }
+
+  bool _listMatch(List<AppInfo> list1, List<AppInfo> list2) {
+    if (list1.length != list2.length) return false;
+    for (int i = 0; i < list1.length; i++) {
+      if (list1[i].packageName != list2[i].packageName) return false;
+    }
+    return true;
   }
 
   Widget buildTile(AppInfo app) {
@@ -136,9 +151,9 @@ class _HomeScreenState extends State<HomeScreen>
                       top: 30,
                     ),
                     physics: const NeverScrollableScrollPhysics(),
-                    itemCount: pinnedApps.length,
+                    itemCount: _displayPinnedApps.length,
                     itemBuilder: (context, index) {
-                      final app = pinnedApps[index];
+                      final app = _displayPinnedApps[index];
                       return buildTile(app);
                     },
                   ),
@@ -309,7 +324,11 @@ class _HomeScreenState extends State<HomeScreen>
                         await InstalledApps.startApp(app.packageName);
                       },
                       onLongPress: () {
-                        AppDialogs.appDialogBox(context, app, _loadApps);
+                        AppDialogs.appDialogBox(context, app, _loadApps, (app) {
+                          setState(() {
+                            _displayPinnedApps.add(app);
+                          });
+                        });
                       },
                     );
                   },
