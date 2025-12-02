@@ -35,8 +35,8 @@ class ThemeService extends ChangeNotifier {
     AppTheme(
       id: 'dark',
       name: 'Dark',
-      background: Color(0xFF263238),
-      iconColor: Color(0xFFECEFF1),
+      background: Color.fromARGB(255, 66, 86, 95),
+      iconColor: Color.fromARGB(255, 175, 189, 189),
       textColor: Color(0xFFECEFF1),
       dialogColor: Color(0xFF37474F),
     ),
@@ -47,22 +47,6 @@ class ThemeService extends ChangeNotifier {
       iconColor: Color.fromARGB(255, 231, 245, 255),
       textColor: Color(0xFFFFFFFF),
       dialogColor: Color.fromARGB(255, 39, 50, 67),
-    ),
-    AppTheme(
-      id: 'warm',
-      name: 'Warm',
-      background: Color.fromARGB(255, 99, 64, 46),
-      iconColor: Color.fromARGB(255, 231, 245, 255),
-      textColor: Color.fromARGB(255, 219, 225, 230),
-      dialogColor: Color.fromARGB(255, 88, 68, 38),
-    ),
-    AppTheme(
-      id: 'green',
-      name: 'Green',
-      background: Color.fromARGB(255, 8, 48, 35),
-      iconColor: Color.fromARGB(255, 254, 255, 255),
-      textColor: Color.fromARGB(255, 252, 243, 243),
-      dialogColor: Color.fromARGB(255, 13, 68, 50),
     ),
     AppTheme(
       id: 'softGrey',

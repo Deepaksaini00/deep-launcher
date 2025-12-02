@@ -1,3 +1,4 @@
+import 'package:flutter/widgets.dart';
 import 'package:installed_apps/installed_apps.dart';
 import 'package:installed_apps/app_info.dart';
 import 'dart:convert';
@@ -7,12 +8,13 @@ class InstalledAppsService {
   // List of pinned Apps..
 
   static const _pinnedKey = 'pinned_apps';
-
+  static List<AppInfo>? _installedCache;
   static List<AppInfo> _cachedPinnedApps = [];
   static Map<String, String?> _cachedIcons = {};
   // Fetch and print Installed apps...
 
   static Future<List<AppInfo>> getInstalledApps() async {
+    if (_installedCache != null) return _installedCache!;
     try {
       // List of Installed apps..
       List<AppInfo> installedApps = await InstalledApps.getInstalledApps(
@@ -22,6 +24,7 @@ class InstalledAppsService {
       );
       print('📱 Installed user apps:');
       print('✅ Total user apps found: ${installedApps.length}');
+      _installedCache = installedApps;
       return installedApps;
     } catch (e) {
       print('⚠️ Error fetching apps: $e');
@@ -29,6 +32,11 @@ class InstalledAppsService {
     }
   }
 
+  static Future<void> refreshInstalledApps() async {
+    _installedCache = null; // Clear cache
+    _cachedPinnedApps = []; // Clear pinned cache
+    await getInstalledApps(); // Reload fresh data
+  }
   // =====
   // Add App to Pinned Apps List..!!
   // ====
@@ -47,7 +55,10 @@ class InstalledAppsService {
     )) {
       pinnedApps.add(jsonEncode(jsonItem));
       await prefs.setStringList(_pinnedKey, pinnedApps);
-      _cachedPinnedApps.add(app);
+      if (!_cachedPinnedApps.any((a) => a.packageName == app.packageName)) {
+        _cachedPinnedApps.add(app);
+      }
+      // _cachedPinnedApps.add(app);
       print('📌 Pinned app: ${app.name}');
     }
   }

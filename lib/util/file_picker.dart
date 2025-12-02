@@ -28,7 +28,7 @@ class GridAppPicker {
   }
 
   static Future<String> saveFileToLocalStorage(String json) async {
-    await requestAllFilesAccess(); // <-- ADD THIS LINE
+    await requestAllFilesAccess();
     final downloadsDir = Directory("/storage/emulated/0/Download");
 
     if (!downloadsDir.existsSync()) {

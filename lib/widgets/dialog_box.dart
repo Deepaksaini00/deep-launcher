@@ -29,6 +29,7 @@ class AppDialogs {
                 ),
                 onTap: () async {
                   await InstalledAppsService.addToPinned(app);
+                  // InstalledAppsService.addToPinnedCache(app);
                   if (!context.mounted) return;
                   Navigator.pop(context);
                   await refresh();

@@ -15,9 +15,11 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen>
+    with AutomaticKeepAliveClientMixin {
   Map<String, String?> iconKeyCache = {};
   bool isSearching = false;
+  bool _appsLoadedOnce = false;
   // Store Icons for 12 apps...
   List<IconData?> homeIcons = List.filled(12, null);
   IconData defaultIcon = Icons.apps;
@@ -41,10 +43,14 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     _loadApps();
+    _appsLoadedOnce = true;
     InstalledAppsService.printPinnedAppsPretty();
   }
 
-  void _loadApps() async {
+  void _loadApps({bool forceRefresh = false}) async {
+    if (forceRefresh) {
+      await InstalledAppsService.refreshInstalledApps();
+    }
     var apps = await InstalledAppsService.getInstalledApps();
     var pinned = await InstalledAppsService.getPinnedApps();
     apps.sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
@@ -92,7 +98,11 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   @override
+  bool get wantKeepAlive => true;
+
+  @override
   Widget build(BuildContext context) {
+    super.build(context);
     return Scaffold(
       appBar: AppBar(
         toolbarHeight: -2,
@@ -133,26 +143,6 @@ class _HomeScreenState extends State<HomeScreen> {
                     },
                   ),
                 ),
-                // child: Center(
-                //   child: GridView.count(
-                //     crossAxisCount: 2,
-                //     primary: false,
-                //     padding: const EdgeInsets.only(
-                //       left: 20,
-                //       right: 20,
-                //       // bottom: 10,
-                //       top: 30,
-                //     ),
-                //     crossAxisSpacing: 10,
-                //     mainAxisSpacing: 10,
-                //     physics: NeverScrollableScrollPhysics(),
-                //     childAspectRatio: 1.5,
-                //     children: List.generate(pinnedApps.length, (index) {
-                //       final app = pinnedApps[index];
-                //       return buildTile(app);
-                //     }),
-                //   ),
-                // ),
               ),
 
               // 2️⃣ Search bar + 3-dot button (bottom) >>>>>
@@ -246,7 +236,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 final action = await askGlobalAction(context);
                                 switch (action) {
                                   case GlobalAction.refreshApps:
-                                    _loadApps();
+                                    _loadApps(forceRefresh: true);
                                     break;
                                   case GlobalAction.exportGridJson:
                                     final String? json =
