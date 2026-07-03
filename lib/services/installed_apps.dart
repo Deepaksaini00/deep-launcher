@@ -8,13 +8,60 @@ class InstalledAppsService {
   // List of pinned Apps..
 
   static const _pinnedKey = 'pinned_apps';
+  static const _installedAppsKey = 'installed_apps_cache';
   static List<AppInfo>? _installedCache;
   static List<AppInfo> _cachedPinnedApps = [];
   static Map<String, String?> _cachedIcons = {};
-  // Fetch and print Installed apps...
 
+  // Save installed apps list to SharedPreferences cache
+  static Future<void> _saveInstalledAppsToPrefs(List<AppInfo> apps) async {
+    try {
+      final SharedPreferences prefs = await SharedPreferences.getInstance();
+      final List<String> list = apps.map((app) {
+        return jsonEncode({
+          "name": app.name,
+          "package_name": app.packageName,
+          "version_name": app.versionName,
+          "version_code": app.versionCode,
+          "platform_type": app.platformType.slug,
+          "installed_timestamp": app.installedTimestamp,
+          "is_system_app": app.isSystemApp,
+          "is_launchable_app": app.isLaunchableApp,
+        });
+      }).toList();
+      await prefs.setStringList(_installedAppsKey, list);
+    } catch (e) {
+      print("⚠️ Error saving installed apps cache: $e");
+    }
+  }
+
+  // Load installed apps list from SharedPreferences cache
+  static Future<List<AppInfo>> _loadInstalledAppsFromPrefs() async {
+    try {
+      final SharedPreferences prefs = await SharedPreferences.getInstance();
+      final List<String>? list = prefs.getStringList(_installedAppsKey);
+      if (list == null || list.isEmpty) return [];
+      return list.map((item) {
+        final Map<String, dynamic> data = jsonDecode(item);
+        return AppInfo.create(data);
+      }).toList();
+    } catch (e) {
+      print("⚠️ Error loading installed apps cache: $e");
+      return [];
+    }
+  }
+
+  // Fetch and print Installed apps...
   static Future<List<AppInfo>> getInstalledApps() async {
     if (_installedCache != null) return _installedCache!;
+    
+    // Try to load from persistent cache first
+    final cached = await _loadInstalledAppsFromPrefs();
+    if (cached.isNotEmpty) {
+      _installedCache = cached;
+      return cached;
+    }
+
     try {
       // List of Installed apps..
       List<AppInfo> installedApps = await InstalledApps.getInstalledApps(
@@ -22,9 +69,10 @@ class InstalledAppsService {
         excludeNonLaunchableApps: true,
         withIcon: false,
       );
-      print('📱 Installed user apps:');
+      print('📱 Installed user apps loaded from system (first run):');
       print('✅ Total user apps found: ${installedApps.length}');
       _installedCache = installedApps;
+      await _saveInstalledAppsToPrefs(installedApps);
       return installedApps;
     } catch (e) {
       print('⚠️ Error fetching apps: $e');
@@ -35,7 +83,18 @@ class InstalledAppsService {
   static Future<void> refreshInstalledApps() async {
     _installedCache = null; // Clear cache
     _cachedPinnedApps = []; // Clear pinned cache
-    await getInstalledApps(); // Reload fresh data
+    try {
+      List<AppInfo> installedApps = await InstalledApps.getInstalledApps(
+        excludeSystemApps: false,
+        excludeNonLaunchableApps: true,
+        withIcon: false,
+      );
+      print('📱 Refreshed installed user apps from system');
+      _installedCache = installedApps;
+      await _saveInstalledAppsToPrefs(installedApps);
+    } catch (e) {
+      print('⚠️ Error refreshing apps: $e');
+    }
   }
   // =====
   // Add App to Pinned Apps List..!!
@@ -82,17 +141,25 @@ class InstalledAppsService {
     final prefs = await SharedPreferences.getInstance();
     List<String> pinnedApps = prefs.getStringList(_pinnedKey) ?? [];
 
+    final allApps = await getInstalledApps();
+
     for (var item in pinnedApps) {
       try {
         final data = jsonDecode(item);
-        if (data['packageName'] == null) {
+        final packageName = data['packageName'];
+        if (packageName == null) {
           print("~~ ❌ Invalid entry (missing packageName): $data");
           continue;
         }
 
-        final app = await InstalledApps.getAppInfo(data["packageName"]);
-        if (app != null) {
-          pinnedAppList.add(app);
+        final int index = allApps.indexWhere((a) => a.packageName == packageName);
+        if (index != -1) {
+          pinnedAppList.add(allApps[index]);
+        } else {
+          final app = await InstalledApps.getAppInfo(packageName);
+          if (app != null) {
+            pinnedAppList.add(app);
+          }
         }
       } catch (e) {
         print(">>> ❌ JSON error: $e → $item");

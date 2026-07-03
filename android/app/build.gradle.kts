@@ -48,16 +48,16 @@ android {
     buildTypes {
         getByName("release") {
             signingConfig = signingConfigs.getByName("release")
-            isMinifyEnabled =true 
-            isShrinkResources = true 
+            isMinifyEnabled = false
+            isShrinkResources = false
         }
     }
-    android.applicationVariants.all {
-        outputs.all {
-            val outputImpl = this as com.android.build.gradle.internal.api.ApkVariantOutputImpl
-            outputImpl.outputFileName = "deep_launcher.apk"
-        }
-    }
+    // android.applicationVariants.all {
+    //     outputs.all {
+    //         val outputImpl = this as com.android.build.gradle.internal.api.ApkVariantOutputImpl
+    //         outputImpl.outputFileName = "deep_launcher.apk"
+    //     }
+    // }
 }
 
 flutter {
