@@ -21,12 +21,14 @@ class _HomeScreenState extends State<HomeScreen>
     with AutomaticKeepAliveClientMixin {
   Map<String, String?> iconKeyCache = {};
   bool isSearching = false;
+  bool isAppScreenVisible = false;
   // Store Icons for 12 apps...
   List<IconData?> homeIcons = List.filled(12, null);
   IconData defaultIcon = Icons.apps;
 
   // Search Controller..
   TextEditingController searchController = TextEditingController();
+  FocusNode searchFocusNode = FocusNode();
 
   // Store installed apps ..
   List<AppInfo> installedApps = [];
@@ -40,6 +42,13 @@ class _HomeScreenState extends State<HomeScreen>
       _displayPinnedApps.removeWhere((a) => a.packageName == packageName);
       iconKeyCache.remove(packageName);
     });
+  }
+
+  @override
+  void dispose() {
+    searchController.dispose();
+    searchFocusNode.dispose();
+    super.dispose();
   }
 
   @override
@@ -143,36 +152,96 @@ class _HomeScreenState extends State<HomeScreen>
               children: [
                 // 1️⃣ GridView (center of screen) >>>>
                 Expanded(
-                  child: Center(
-                    child: GridView.builder(
-                      gridDelegate:
-                          const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 2,
-                            crossAxisSpacing: 10,
-                            mainAxisSpacing: 10,
-                            childAspectRatio: 1.5,
+                  child: AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 300),
+                    switchInCurve: Curves.easeInOut,
+                    switchOutCurve: Curves.easeInOut,
+                    child: isAppScreenVisible
+                        ? GridView.builder(
+                            key: const ValueKey('appScreen'),
+                            gridDelegate:
+                                const SliverGridDelegateWithFixedCrossAxisCount(
+                                  crossAxisCount: 2,
+                                  crossAxisSpacing: 10,
+                                  mainAxisSpacing: 10,
+                                  childAspectRatio: 1.5,
+                                ),
+                            padding: const EdgeInsets.only(
+                              left: 20,
+                              right: 20,
+                              top: 10,
+                            ),
+                            physics: const NeverScrollableScrollPhysics(),
+                            itemCount: _displayPinnedApps.length,
+                            itemBuilder: (context, index) {
+                              final app = _displayPinnedApps[index];
+                              return buildTile(app);
+                            },
+                          )
+                        : Align(
+                            key: const ValueKey('emptyScreen'),
+                            alignment: Alignment.topLeft,
+                            child: Padding(
+                              padding: const EdgeInsets.only(
+                                left: 30.0,
+                                top: 50.0,
+                              ),
+                              child: StreamBuilder(
+                                stream: Stream.periodic(
+                                  const Duration(minutes: 1),
+                                ),
+                                builder: (context, snapshot) {
+                                  final now = DateTime.now();
+                                  String formatTime(int t) =>
+                                      t.toString().padLeft(2, '0');
+                                  final timeString =
+                                      "${formatTime(now.hour)}:${formatTime(now.minute)}";
+                                  return Text(
+                                    timeString,
+                                    style: TextStyle(
+                                      fontSize: 72,
+                                      fontWeight: FontWeight.bold,
+                                      letterSpacing: 1.5,
+                                      shadows: [
+                                        Shadow(
+                                          color: Colors.black26,
+                                          offset: Offset(2, 2),
+                                          blurRadius: 4,
+                                        ),
+                                      ],
+                                      color: Theme.of(
+                                        context,
+                                      ).textTheme.bodyMedium?.color,
+                                    ),
+                                  );
+                                },
+                              ),
+                            ),
                           ),
-                      padding: const EdgeInsets.only(
-                        left: 20,
-                        right: 20,
-                        top: 30,
-                      ),
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemCount: _displayPinnedApps.length,
-                      itemBuilder: (context, index) {
-                        final app = _displayPinnedApps[index];
-                        return buildTile(app);
-                      },
-                    ),
                   ),
                 ),
 
+                if (!isSearching)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 10.0),
+                    child: IconButton(
+                      icon: const Icon(Icons.apps, size: 36),
+                      color: Theme.of(context).iconTheme.color,
+                      onPressed: () {
+                        setState(() {
+                          isAppScreenVisible = !isAppScreenVisible;
+                        });
+                      },
+                    ),
+                  ),
+
                 // 2️⃣ Search bar + 3-dot button (bottom) >>>>>
                 Padding(
+                  key: const ValueKey('searchBar'),
                   padding: const EdgeInsets.only(
-                    bottom: 5.0,
-                    left: 8.0,
-                    right: 8.0,
+                    bottom: 10.0,
+                    left: 10.0,
+                    right: 10.0,
                   ),
                   child: Row(
                     children: [
@@ -191,11 +260,12 @@ class _HomeScreenState extends State<HomeScreen>
                           ),
                           child: TextField(
                             controller: searchController,
+                            focusNode: searchFocusNode,
                             autofocus: false,
-                            // focusNode: FocusNode(skipTraversal: true),
                             onTap: () {
                               if (!isSearching) {
                                 setState(() => isSearching = true);
+                                searchFocusNode.requestFocus();
                               }
                             },
                             // Filter the apps ...
@@ -320,7 +390,9 @@ class _HomeScreenState extends State<HomeScreen>
                         title: Text(
                           app.name,
                           style: TextStyle(
-                            color: Theme.of(context).textTheme.bodyMedium?.color,
+                            color: Theme.of(
+                              context,
+                            ).textTheme.bodyMedium?.color,
                           ),
                         ),
                         onTap: () async {
@@ -332,7 +404,9 @@ class _HomeScreenState extends State<HomeScreen>
                           await InstalledApps.startApp(app.packageName);
                         },
                         onLongPress: () {
-                          AppDialogs.appDialogBox(context, app, _loadApps, (app) {
+                          AppDialogs.appDialogBox(context, app, _loadApps, (
+                            app,
+                          ) {
                             setState(() {
                               _displayPinnedApps.add(app);
                             });
