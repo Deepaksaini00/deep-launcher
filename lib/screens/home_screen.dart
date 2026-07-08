@@ -1,5 +1,3 @@
-import 'dart:math';
-
 import 'package:android_launcher/icons/app_icons.dart';
 import 'package:android_launcher/services/global_actions.dart';
 import 'package:android_launcher/services/installed_apps.dart';
@@ -192,27 +190,129 @@ class _HomeScreenState extends State<HomeScreen>
                                 ),
                                 builder: (context, snapshot) {
                                   final now = DateTime.now();
+                                  final hour = now.hour.toString().padLeft(
+                                    2,
+                                    '0',
+                                  );
+                                  final minute = now.minute.toString().padLeft(
+                                    2,
+                                    '0',
+                                  );
                                   String formatTime(int t) =>
                                       t.toString().padLeft(2, '0');
                                   final timeString =
                                       "${formatTime(now.hour)}:${formatTime(now.minute)}";
-                                  return Text(
-                                    timeString,
-                                    style: TextStyle(
-                                      fontSize: 72,
-                                      fontWeight: FontWeight.bold,
-                                      letterSpacing: 1.5,
-                                      shadows: [
-                                        Shadow(
-                                          color: Colors.black26,
-                                          offset: Offset(2, 2),
-                                          blurRadius: 4,
+                                  final weekdays = [
+                                    'Mon',
+                                    'Tue',
+                                    'Wed',
+                                    'Thu',
+                                    'Fri',
+                                    'Sat',
+                                    'Sun',
+                                  ];
+                                  final months = [
+                                    'Jan',
+                                    'Feb',
+                                    'Mar',
+                                    'Apr',
+                                    'May',
+                                    'Jun',
+                                    'Jul',
+                                    'Aug',
+                                    'Sep',
+                                    'Oct',
+                                    'Nov',
+                                    'Dec',
+                                  ];
+                                  final dateString =
+                                      "${weekdays[now.weekday - 1]}, ${now.day} ${months[now.month - 1]}";
+
+                                  return Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Text.rich(
+                                        TextSpan(
+                                          style: TextStyle(
+                                            fontSize: 62,
+                                            fontWeight: FontWeight.bold,
+                                            letterSpacing: 1.5,
+                                            shadows: const [
+                                              Shadow(
+                                                color: Colors.black26,
+                                                offset: Offset(2.5, 2.5),
+                                                blurRadius: 3,
+                                              ),
+                                            ],
+                                            color: Theme.of(
+                                              context,
+                                            ).textTheme.bodyMedium?.color,
+                                          ),
+                                          children: [
+                                            TextSpan(text: '$hour:'),
+                                            TextSpan(
+                                              text:
+                                                  minute[0], // first minute digit
+                                              style: const TextStyle(
+                                                color: Color.fromARGB(
+                                                  221,
+                                                  219,
+                                                  20,
+                                                  6,
+                                                ),
+                                              ),
+                                            ),
+                                            TextSpan(
+                                              text: minute[1],
+                                            ), // second minute digit
+                                          ],
                                         ),
-                                      ],
-                                      color: Theme.of(
-                                        context,
-                                      ).textTheme.bodyMedium?.color,
-                                    ),
+                                      ),
+                                      // Text(
+                                      //   timeString,
+                                      //   style: TextStyle(
+                                      //     fontSize: 62,
+                                      //     fontWeight: FontWeight.bold,
+                                      //     letterSpacing: 1.5,
+                                      //     shadows: const [
+                                      //       Shadow(
+                                      //         color: Colors.black26,
+                                      //         offset: Offset(2.5, 2.5),
+                                      //         blurRadius: 3,
+                                      //       ),
+                                      //     ],
+                                      //     color: Theme.of(
+                                      //       context,
+                                      //     ).textTheme.bodyMedium?.color,
+                                      //   ),
+                                      // ),
+                                      Padding(
+                                        padding: const EdgeInsets.only(
+                                          left: 10,
+                                        ),
+                                        child: Text(
+                                          dateString,
+                                          style: TextStyle(
+                                            fontSize: 17,
+                                            fontWeight: FontWeight.w500,
+                                            shadows: const [
+                                              Shadow(
+                                                color: Colors.black26,
+                                                offset: Offset(1, 1),
+                                                blurRadius: 3,
+                                              ),
+                                            ],
+                                            color: Theme.of(context)
+                                                .textTheme
+                                                .bodyMedium
+                                                ?.color
+                                                ?.withOpacity(0.9),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
                                   );
                                 },
                               ),
@@ -225,7 +325,12 @@ class _HomeScreenState extends State<HomeScreen>
                   Padding(
                     padding: const EdgeInsets.only(bottom: 10.0),
                     child: IconButton(
-                      icon: const Icon(Icons.apps, size: 36),
+                      icon: Image.asset(
+                        'assets/wink.png',
+                        width: 40,
+                        height: 40,
+                      ),
+                      // icon: const Icon(Icons.apps, size: 36),
                       color: Theme.of(context).iconTheme.color,
                       onPressed: () {
                         setState(() {
