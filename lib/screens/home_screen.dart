@@ -238,19 +238,47 @@ class _HomeScreenState extends State<HomeScreen>
                       Expanded(
                         flex: 5,
                         child: Padding(
-                          padding: const EdgeInsets.only(top: 20, right: 15),
-                          child: GridView.builder(
-                            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: 2,
-                              crossAxisSpacing: 10,
-                              mainAxisSpacing: 15,
-                              childAspectRatio: 0.85,
+                          padding: const EdgeInsets.only(top: 20, right: 15, bottom: 20),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(24),
+                            child: BackdropFilter(
+                              filter: ImageFilter.blur(
+                                sigmaX: wallpaper.hasWallpaper ? 10 : 0,
+                                sigmaY: wallpaper.hasWallpaper ? 10 : 0,
+                              ),
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: wallpaper.hasWallpaper
+                                      ? theme.background.withValues(
+                                          alpha: isDark ? 0.4 : 0.3,
+                                        )
+                                      : Colors.transparent,
+                                  borderRadius: BorderRadius.circular(24),
+                                  border: wallpaper.hasWallpaper
+                                      ? Border.all(
+                                          color: theme.textColor.withValues(alpha: 0.15),
+                                          width: 1,
+                                        )
+                                      : null,
+                                ),
+                                padding: wallpaper.hasWallpaper
+                                    ? const EdgeInsets.all(12)
+                                    : EdgeInsets.zero,
+                                child: GridView.builder(
+                                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                                    crossAxisCount: 2,
+                                    crossAxisSpacing: 10,
+                                    mainAxisSpacing: 15,
+                                    childAspectRatio: 0.85,
+                                  ),
+                                  itemCount: _displayPinnedApps.length,
+                                  itemBuilder: (context, index) {
+                                    final app = _displayPinnedApps[index];
+                                    return buildTile(app);
+                                  },
+                                ),
+                              ),
                             ),
-                            itemCount: _displayPinnedApps.length,
-                            itemBuilder: (context, index) {
-                              final app = _displayPinnedApps[index];
-                              return buildTile(app);
-                            },
                           ),
                         ),
                       ),
@@ -262,14 +290,31 @@ class _HomeScreenState extends State<HomeScreen>
                 Padding(
                   key: const ValueKey('searchBar'),
                   padding: const EdgeInsets.fromLTRB(16.0, 0.0, 16.0, 16.0),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: isDark
-                          ? Colors.white.withValues(alpha: 0.12)
-                          : Colors.black.withValues(alpha: 0.08),
-                      borderRadius: BorderRadius.circular(50.0),
-                    ),
-                    child: TextField(
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(50.0),
+                    child: BackdropFilter(
+                      filter: ImageFilter.blur(
+                        sigmaX: wallpaper.hasWallpaper ? 10 : 0,
+                        sigmaY: wallpaper.hasWallpaper ? 10 : 0,
+                      ),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: wallpaper.hasWallpaper
+                              ? theme.background.withValues(
+                                  alpha: isDark ? 0.45 : 0.35,
+                                )
+                              : (isDark
+                                  ? Colors.white.withValues(alpha: 0.12)
+                                  : Colors.black.withValues(alpha: 0.08)),
+                          borderRadius: BorderRadius.circular(50.0),
+                          border: wallpaper.hasWallpaper
+                              ? Border.all(
+                                  color: theme.textColor.withValues(alpha: 0.15),
+                                  width: 1,
+                                )
+                              : null,
+                        ),
+                        child: TextField(
                       controller: searchController,
                       focusNode: searchFocusNode,
                       style: TextStyle(color: theme.textColor),
@@ -353,8 +398,10 @@ class _HomeScreenState extends State<HomeScreen>
                     ),
                   ),
                 ),
-              ],
+              ),
             ),
+          ],
+        ),
 
             // 3. Search Results Overlay (visible when searching)
             if (isSearching)
@@ -367,7 +414,11 @@ class _HomeScreenState extends State<HomeScreen>
                   child: BackdropFilter(
                     filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
                     child: Container(
-                      color: theme.background.withValues(alpha: 0.85),
+                      color: theme.background.withValues(
+                        alpha: wallpaper.hasWallpaper
+                            ? (isDark ? 0.45 : 0.35)
+                            : 0.95,
+                      ),
                       child: ListView.builder(
                         padding: const EdgeInsets.only(top: 20, bottom: 30),
                         itemCount: filteredApps.length,
@@ -394,11 +445,6 @@ class _HomeScreenState extends State<HomeScreen>
                                 context,
                                 app,
                                 _loadApps,
-                                (app) {
-                                  setState(() {
-                                    _displayPinnedApps.add(app);
-                                  });
-                                },
                               );
                             },
                           );

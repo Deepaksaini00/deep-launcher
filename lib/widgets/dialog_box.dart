@@ -11,7 +11,6 @@ class AppDialogs {
     BuildContext context,
     AppInfo app,
     VoidCallback refresh,
-    void Function(AppInfo) addToDisplayCache,
   ) {
     showDialog(
       context: context,
@@ -24,21 +23,6 @@ class AppDialogs {
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              ListTile(
-                leading: const Icon(Icons.add_box_outlined),
-                title: Text(
-                  "Add To Main Grid",
-                  style: TextStyle(
-                    color: Theme.of(context).textTheme.bodyMedium?.color,
-                  ),
-                ),
-                onTap: () async {
-                  await InstalledAppsService.addToPinned(app);
-                  if (!context.mounted) return;
-                  Navigator.pop(context);
-                  addToDisplayCache(app);
-                },
-              ),
               ListTile(
                 leading: const Icon(Icons.app_settings_alt_outlined),
                 title: Text(

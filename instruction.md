@@ -53,6 +53,7 @@ Use it only as a design reference.
 **Status (2026-07-11): Completed.**
 - Home screen redesigned using `Row` containing left-aligned empty flex space (flex: 6) and right-aligned two-column app grid (flex: 5).
 - Custom rounded icon layout with padded text labels matching target design.
+- Added a beautiful frosted glass panel (glassmorphism with blur and adaptive opacity) behind the app grid on the right side to ensure app icons and text labels remain highly visible and readable on top of any wallpaper (light or dark, busy or plain).
 
 
 Step 3 — Remove Unwanted Screen
@@ -118,7 +119,7 @@ If the app is a system app, show App Info instead.
 - Integrated long press dialogs for both home screen and search results drawer.
 - Implemented option mapping:
   - Home: "Remove From Home", "Select Icon", "Delete App" (or "App Info" for system apps).
-  - Search: "Add To Main Grid", "Open App Setting", "Delete App" (or "App Info" for system apps).
+  - Search: "Open App Setting", "Delete App" (or "App Info" for system apps). "Add To Main Grid" was removed based on final requirements.
 - Triggers standard Android uninstall channel or system settings info screen.
 
 
@@ -145,6 +146,7 @@ Use the implementation from this project as the reference:
 **Status (2026-07-11): Completed.**
 - Implemented options menu using `showModalBottomSheet` triggered by three-dot overflow button.
 - Replicated bottom sheet sliding transition, background dim, layout style, list tiles, and clean action routing from `nkit-launcher`.
+- Added a glassmorphic frosted filter with dynamic contrast to the search bar and search results overlay to render the wallpaper in a smooth, blurry style instead of a solid theme background.
 
 
 Step 6 — Wallpaper Support
