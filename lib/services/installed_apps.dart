@@ -140,6 +140,7 @@ class InstalledAppsService {
     List<AppInfo> pinnedAppList = [];
     final prefs = await SharedPreferences.getInstance();
     List<String> pinnedApps = prefs.getStringList(_pinnedKey) ?? [];
+    List<String> validPinnedApps = [];
 
     final allApps = await getInstalledApps();
 
@@ -148,22 +149,30 @@ class InstalledAppsService {
         final data = jsonDecode(item);
         final packageName = data['packageName'];
         if (packageName == null) {
-          print("~~ ❌ Invalid entry (missing packageName): $data");
           continue;
         }
 
         final int index = allApps.indexWhere((a) => a.packageName == packageName);
         if (index != -1) {
           pinnedAppList.add(allApps[index]);
+          validPinnedApps.add(item);
         } else {
-          final app = await InstalledApps.getAppInfo(packageName);
-          if (app != null) {
-            pinnedAppList.add(app);
+          try {
+            final app = await InstalledApps.getAppInfo(packageName);
+            if (app != null) {
+              pinnedAppList.add(app);
+              validPinnedApps.add(item);
+            }
+          } catch (_) {
+            // App is not installed, prune it from pinned list
           }
         }
       } catch (e) {
         print(">>> ❌ JSON error: $e → $item");
       }
+    }
+    if (validPinnedApps.length != pinnedApps.length) {
+      await prefs.setStringList(_pinnedKey, validPinnedApps);
     }
     _cachedPinnedApps = pinnedAppList;
     return pinnedAppList;

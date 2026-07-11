@@ -3,10 +3,18 @@ import 'package:android_launcher/services/theme_service.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import 'package:android_launcher/services/wallpaper_service.dart';
+
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   runApp(
-    ChangeNotifierProvider(create: (_) => ThemeService(), child: const MyApp()),
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => ThemeService()),
+        ChangeNotifierProvider(create: (_) => WallpaperService()),
+      ],
+      child: const MyApp(),
+    ),
   );
 }
 
@@ -16,7 +24,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer<ThemeService>(
       builder: (context, themSvc, _) {
-        final them = themSvc.current;
+        final them = themSvc.resolvedTheme(context);
         return MaterialApp(
           debugShowCheckedModeBanner: false,
           title: "Deep Launcher",

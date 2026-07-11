@@ -32,7 +32,6 @@ Future<void> showThemePickerDialog(BuildContext context) async {
                       width: 70,
                       height: 66,
                       decoration: BoxDecoration(
-                        color: appTheme.background,
                         borderRadius: BorderRadius.circular(12),
                         border: isSelected
                             ? Border.all(width: 3, color: Colors.black87)
@@ -44,6 +43,27 @@ Future<void> showThemePickerDialog(BuildContext context) async {
                             ? [BoxShadow(color: Colors.black26, blurRadius: 6)]
                             : null,
                       ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(9),
+                        child: appTheme.id == 'system'
+                            ? Row(
+                                children: [
+                                  Expanded(
+                                    child: Container(
+                                      color: ThemeService.lightTheme.background,
+                                    ),
+                                  ),
+                                  Expanded(
+                                    child: Container(
+                                      color: ThemeService.darkTheme.background,
+                                    ),
+                                  ),
+                                ],
+                              )
+                            : Container(
+                                color: appTheme.background,
+                              ),
+                      ),
                     ),
                     const SizedBox(height: 6),
                     SizedBox(
@@ -53,7 +73,7 @@ Future<void> showThemePickerDialog(BuildContext context) async {
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           fontSize: 12,
-                          color: themeSvc.current.textColor,
+                          color: themeSvc.resolvedTheme(context).textColor,
                         ),
                         overflow: TextOverflow.ellipsis,
                       ),

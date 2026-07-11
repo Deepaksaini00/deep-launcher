@@ -6,21 +6,21 @@ import 'package:installed_apps/installed_apps.dart';
 
 class AppDialogs {
   // 1️⃣ App Drawer Dialog
+  // 1️⃣ App Drawer Dialog
   static void appDialogBox(
     BuildContext context,
     AppInfo app,
-    refresh,
+    VoidCallback refresh,
     void Function(AppInfo) addToDisplayCache,
   ) {
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
-          // backgroundColor: const Color.fromARGB(255, 106, 135, 149),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20.0),
           ),
-          title: Text(app.name, style: TextStyle(fontWeight: FontWeight.bold)),
+          title: Text(app.name, style: const TextStyle(fontWeight: FontWeight.bold)),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -34,13 +34,11 @@ class AppDialogs {
                 ),
                 onTap: () async {
                   await InstalledAppsService.addToPinned(app);
-                  // InstalledAppsService.addToPinnedCache(app);
                   if (!context.mounted) return;
                   Navigator.pop(context);
                   addToDisplayCache(app);
                 },
               ),
-              // const Divider(),
               ListTile(
                 leading: const Icon(Icons.app_settings_alt_outlined),
                 title: Text(
@@ -52,6 +50,24 @@ class AppDialogs {
                 onTap: () async {
                   InstalledApps.openSettings(app.packageName);
                   Navigator.pop(context);
+                },
+              ),
+              ListTile(
+                leading: Icon(app.isSystemApp ? Icons.info_outline : Icons.delete_forever),
+                title: Text(
+                  app.isSystemApp ? "App Info" : "Delete App",
+                  style: TextStyle(
+                    color: Theme.of(context).textTheme.bodyMedium?.color,
+                  ),
+                ),
+                onTap: () async {
+                  Navigator.pop(context);
+                  if (app.isSystemApp) {
+                    await InstalledApps.openSettings(app.packageName);
+                  } else {
+                    await InstalledApps.uninstallApp(app.packageName);
+                  }
+                  refresh();
                 },
               ),
             ],
@@ -71,13 +87,10 @@ class AppDialogs {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        // backgroundColor: Color(
-        // 0xFFCFCFCF,
-        // ), //  const Color.fromARGB(255, 106, 135, 149),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20.0),
         ),
-        title: Text(app.name, style: TextStyle(fontWeight: FontWeight.bold)),
+        title: Text(app.name, style: const TextStyle(fontWeight: FontWeight.bold)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -93,11 +106,8 @@ class AppDialogs {
                 await InstalledAppsService.removePinned(app.packageName);
                 removeFromPinnedCache(app.packageName);
                 Navigator.pop(context);
-
-                // refresh();
               },
             ),
-            // const Divider(),
             ListTile(
               leading: const Icon(Icons.image),
               title: Text(
@@ -109,6 +119,24 @@ class AppDialogs {
               onTap: () async {
                 Navigator.pop(context);
                 AppDialogs.iconDialogBox(context, app, refresh);
+              },
+            ),
+            ListTile(
+              leading: Icon(app.isSystemApp ? Icons.info_outline : Icons.delete_forever),
+              title: Text(
+                app.isSystemApp ? "App Info" : "Delete App",
+                style: TextStyle(
+                  color: Theme.of(context).textTheme.bodyMedium?.color,
+                ),
+              ),
+              onTap: () async {
+                Navigator.pop(context);
+                if (app.isSystemApp) {
+                  await InstalledApps.openSettings(app.packageName);
+                } else {
+                  await InstalledApps.uninstallApp(app.packageName);
+                }
+                refresh();
               },
             ),
           ],
