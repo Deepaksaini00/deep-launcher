@@ -63,7 +63,7 @@ class AppDialogs {
                 onTap: () async {
                   Navigator.pop(context);
                   if (app.isSystemApp) {
-                    await InstalledApps.openSettings(app.packageName);
+                    InstalledApps.openSettings(app.packageName);
                   } else {
                     await InstalledApps.uninstallApp(app.packageName);
                   }
@@ -103,9 +103,10 @@ class AppDialogs {
                 ),
               ),
               onTap: () async {
+                final navigator = Navigator.of(context);
                 await InstalledAppsService.removePinned(app.packageName);
                 removeFromPinnedCache(app.packageName);
-                Navigator.pop(context);
+                navigator.pop();
               },
             ),
             ListTile(
@@ -132,7 +133,7 @@ class AppDialogs {
               onTap: () async {
                 Navigator.pop(context);
                 if (app.isSystemApp) {
-                  await InstalledApps.openSettings(app.packageName);
+                  InstalledApps.openSettings(app.packageName);
                 } else {
                   await InstalledApps.uninstallApp(app.packageName);
                 }

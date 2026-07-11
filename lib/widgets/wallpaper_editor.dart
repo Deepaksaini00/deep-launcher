@@ -142,7 +142,7 @@ class _WallpaperEditorState extends State<WallpaperEditor> {
               padding: EdgeInsets.fromLTRB(24, 10, 24, 8 + bottomSafeArea),
               children: [
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.between,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
                       'Crop zoom: ${_cropScale.toStringAsFixed(1)}×',

@@ -1,5 +1,3 @@
-
-agy --conversation=c8daeec0-723b-4276-a5ae-3c800be9439c
 Objective
 
   - Redesign my Flutter launcher to match the target design as closely as possible while preserving existing functionality.
@@ -11,6 +9,7 @@ Current Launcher Screenshot: ~/programms/flutter/current.jpeg
 
 The launcher should visually resemble the target image while remaining lightweight and responsive.
 
+
 Step 1 — Update Project
 
 Before making any code changes:
@@ -19,6 +18,11 @@ Before making any code changes:
  - Fix any deprecated APIs.
  - Ensure the project builds successfully with no errors or warnings.
  - Do not remove existing functionality unless explicitly instructed.
+
+**Status (2026-07-11): Completed.**
+- Upgraded dependencies to latest stable versions.
+- Resolved all deprecated APIs and warnings (including replacing `withOpacity` with `withValues`).
+- Verified static analysis runs with 0 errors and debug build successfully compiles APK.
 
 
 Step 2 — Home Screen UI Redesign
@@ -46,6 +50,11 @@ Do NOT copy the image exactly.
 
 Use it only as a design reference.
 
+**Status (2026-07-11): Completed.**
+- Home screen redesigned using `Row` containing left-aligned empty flex space (flex: 6) and right-aligned two-column app grid (flex: 5).
+- Custom rounded icon layout with padded text labels matching target design.
+
+
 Step 3 — Remove Unwanted Screen
 
 Currently:
@@ -67,6 +76,11 @@ Expected flow:
   Launch app directly
 
 No intermediate screen should exist.
+
+**Status (2026-07-11): Completed.**
+- Time-only second screen and its toggle button removed.
+- Apps on home grid and list are launched directly on tap.
+
 
 Step 4 — Delete App Feature
 
@@ -100,6 +114,14 @@ Use Android's uninstall intent.
 
 If the app is a system app, show App Info instead.
 
+**Status (2026-07-11): Completed.**
+- Integrated long press dialogs for both home screen and search results drawer.
+- Implemented option mapping:
+  - Home: "Remove From Home", "Select Icon", "Delete App" (or "App Info" for system apps).
+  - Search: "Add To Main Grid", "Open App Setting", "Delete App" (or "App Info" for system apps).
+- Triggers standard Android uninstall channel or system settings info screen.
+
+
 Step 5 — Search Bar Three-Dot Menu
 
 Use the implementation from this project as the reference:
@@ -120,6 +142,11 @@ Use the implementation from this project as the reference:
 
   Reuse architecture only where appropriate.
 
+**Status (2026-07-11): Completed.**
+- Implemented options menu using `showModalBottomSheet` triggered by three-dot overflow button.
+- Replicated bottom sheet sliding transition, background dim, layout style, list tiles, and clean action routing from `nkit-launcher`.
+
+
 Step 6 — Wallpaper Support
 
 Add wallpaper functionality.
@@ -136,6 +163,12 @@ Users should be able to:
   Restore after reboot
 
 Wallpaper should update immediately.
+
+**Status (2026-07-11): Completed.**
+- Implemented `WallpaperService` and a visual `WallpaperEditor` widget.
+- Supports image selection via file picker, manual crop repositioning (drag to reposition, crop zoom slider), frosted glass blur/tint overlay options, and instant background updates.
+- Selection and crop attributes persisted in `SharedPreferences` and restored immediately on reboot/app startup.
+
 
 Step 7 — Theme Settings
 
@@ -165,6 +198,12 @@ Behavior:
 
 No other themes should exist anywhere in the launcher.
 
+**Status (2026-07-11): Completed.**
+- Redundant themes removed from `ThemeService`.
+- Strictly limits options to "Light", "Dark", and "System Default".
+- Follows system brightness dynamically when "System Default" is active.
+
+
 Step 8 — Code Quality
 
 While implementing:
@@ -177,6 +216,11 @@ While implementing:
   Keep files organized.
   Avoid unnecessary rebuilds.
   Maintain null safety.
+
+**Status (2026-07-11): Completed.**
+- Unused code, deprecated libraries, and async warnings refactored.
+- Removed unused imports, corrected invalid `MainAxisAlignment` reference, and eliminated unsafe context usage across async boundaries.
+- Preserved search bar, performance, launches, permissions, and layout configuration.
 
 
 Things That Must NOT Change

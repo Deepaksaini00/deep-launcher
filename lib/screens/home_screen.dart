@@ -107,8 +107,8 @@ class _HomeScreenState extends State<HomeScreen>
 
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final iconBgColor = isDark
-        ? Colors.white.withOpacity(0.08)
-        : Colors.black.withOpacity(0.06);
+        ? Colors.white.withValues(alpha: 0.08)
+        : Colors.black.withValues(alpha: 0.06);
 
     return InkWell(
       borderRadius: BorderRadius.circular(20),
@@ -265,8 +265,8 @@ class _HomeScreenState extends State<HomeScreen>
                   child: Container(
                     decoration: BoxDecoration(
                       color: isDark
-                          ? Colors.white.withOpacity(0.12)
-                          : Colors.black.withOpacity(0.08),
+                          ? Colors.white.withValues(alpha: 0.12)
+                          : Colors.black.withValues(alpha: 0.08),
                       borderRadius: BorderRadius.circular(50.0),
                     ),
                     child: TextField(
@@ -298,7 +298,7 @@ class _HomeScreenState extends State<HomeScreen>
                         ),
                         hintText: 'Search Apps ${installedApps.length}',
                         hintStyle: TextStyle(
-                          color: theme.textColor.withOpacity(0.6),
+                          color: theme.textColor.withValues(alpha: 0.6),
                           fontSize: 16,
                         ),
                         suffixIcon: IconButton(
@@ -367,7 +367,7 @@ class _HomeScreenState extends State<HomeScreen>
                   child: BackdropFilter(
                     filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
                     child: Container(
-                      color: theme.background.withOpacity(0.85),
+                      color: theme.background.withValues(alpha: 0.85),
                       child: ListView.builder(
                         padding: const EdgeInsets.only(top: 20, bottom: 30),
                         itemCount: filteredApps.length,

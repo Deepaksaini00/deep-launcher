@@ -1,4 +1,3 @@
-import 'package:flutter/widgets.dart';
 import 'package:installed_apps/installed_apps.dart';
 import 'package:installed_apps/app_info.dart';
 import 'dart:convert';
@@ -259,7 +258,7 @@ class InstalledAppsService {
         try {
           final data = jsonDecode(item);
           final packageName = data['packageName'];
-          final iconSlug = await prefs.getString(packageName);
+          final iconSlug = prefs.getString(packageName);
           if (iconSlug != null) {
             _cachedIcons[packageName] = iconSlug;
           } else if (data['iconSlug'] != null) {
