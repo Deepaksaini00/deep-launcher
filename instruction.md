@@ -52,8 +52,10 @@ Use it only as a design reference.
 
 **Status (2026-07-11): Completed.**
 - Home screen redesigned using `Row` containing left-aligned empty flex space (flex: 6) and right-aligned two-column app grid (flex: 5).
-- Custom rounded icon layout with padded text labels matching target design.
-- Added a beautiful frosted glass panel (glassmorphism with blur and adaptive opacity) behind the app grid on the right side to ensure app icons and text labels remain highly visible and readable on top of any wallpaper (light or dark, busy or plain).
+- Styled app icons as circular (`BoxShape.circle`) with a slightly light/white-tinted translucent background (`0.15` alpha in dark theme, `0.65` in light theme) to exactly match the target `main.jpeg` design specifications.
+- Aligned the app grid to the bottom right of the screen layout (`Align(alignment: Alignment.bottomCenter)` with `shrinkWrap: true` on the `GridView`) so that pinned apps start filling from the bottom side first.
+- Replaced the large card/box panel background around the home app grid with a clean, fully transparent background to match the minimal look of the target design.
+- Fixed notification bar wallpaper cropping: configured the Scaffold to extend body elements behind the status and navigation bars (`extendBodyBehindAppBar: true`, `extendBody: true`, `appBar: null`), letting the wallpaper fill the entire screen and eliminating the white header bar.
 
 
 Step 3 — Remove Unwanted Screen

@@ -107,8 +107,8 @@ class _HomeScreenState extends State<HomeScreen>
 
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final iconBgColor = isDark
-        ? Colors.white.withValues(alpha: 0.08)
-        : Colors.black.withValues(alpha: 0.06);
+        ? Colors.white.withValues(alpha: 0.15)
+        : Colors.white.withValues(alpha: 0.65);
 
     return InkWell(
       borderRadius: BorderRadius.circular(20),
@@ -129,7 +129,7 @@ class _HomeScreenState extends State<HomeScreen>
             height: 58,
             decoration: BoxDecoration(
               color: iconBgColor,
-              borderRadius: BorderRadius.circular(16),
+              shape: BoxShape.circle,
             ),
             child: Center(
               child: Icon(
@@ -182,11 +182,9 @@ class _HomeScreenState extends State<HomeScreen>
         }
       },
       child: Scaffold(
-        appBar: AppBar(
-          toolbarHeight: 0,
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-        ),
+        extendBodyBehindAppBar: true,
+        extendBody: true,
+        appBar: null,
         body: Stack(
           children: [
             // 1. Wallpaper Background
@@ -237,47 +235,24 @@ class _HomeScreenState extends State<HomeScreen>
                       // Right: Two-column vertical app layout
                       Expanded(
                         flex: 5,
-                        child: Padding(
-                          padding: const EdgeInsets.only(top: 20, right: 15, bottom: 20),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(24),
-                            child: BackdropFilter(
-                              filter: ImageFilter.blur(
-                                sigmaX: wallpaper.hasWallpaper ? 10 : 0,
-                                sigmaY: wallpaper.hasWallpaper ? 10 : 0,
+                        child: Align(
+                          alignment: Alignment.bottomCenter,
+                          child: Padding(
+                            padding: const EdgeInsets.only(right: 15, bottom: 20, left: 10),
+                            child: GridView.builder(
+                              shrinkWrap: true,
+                              physics: const NeverScrollableScrollPhysics(),
+                              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: 2,
+                                crossAxisSpacing: 10,
+                                mainAxisSpacing: 15,
+                                childAspectRatio: 0.85,
                               ),
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  color: wallpaper.hasWallpaper
-                                      ? theme.background.withValues(
-                                          alpha: isDark ? 0.4 : 0.3,
-                                        )
-                                      : Colors.transparent,
-                                  borderRadius: BorderRadius.circular(24),
-                                  border: wallpaper.hasWallpaper
-                                      ? Border.all(
-                                          color: theme.textColor.withValues(alpha: 0.15),
-                                          width: 1,
-                                        )
-                                      : null,
-                                ),
-                                padding: wallpaper.hasWallpaper
-                                    ? const EdgeInsets.all(12)
-                                    : EdgeInsets.zero,
-                                child: GridView.builder(
-                                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                                    crossAxisCount: 2,
-                                    crossAxisSpacing: 10,
-                                    mainAxisSpacing: 15,
-                                    childAspectRatio: 0.85,
-                                  ),
-                                  itemCount: _displayPinnedApps.length,
-                                  itemBuilder: (context, index) {
-                                    final app = _displayPinnedApps[index];
-                                    return buildTile(app);
-                                  },
-                                ),
-                              ),
+                              itemCount: _displayPinnedApps.length,
+                              itemBuilder: (context, index) {
+                                final app = _displayPinnedApps[index];
+                                return buildTile(app);
+                              },
                             ),
                           ),
                         ),
