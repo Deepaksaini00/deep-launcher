@@ -2,6 +2,7 @@ import 'package:file_picker/file_picker.dart';
 import 'dart:io';
 
 import 'package:permission_handler/permission_handler.dart';
+import 'package:flutter/foundation.dart';
 
 class GridAppPicker {
   static const _exportFileName = "deep_launcher.json";
@@ -40,7 +41,7 @@ class GridAppPicker {
     // Write bytes (required on Android)
     await file.writeAsBytes(json.codeUnits, flush: true);
 
-    print("📤 Exported JSON saved at: ${file.path}");
+    debugPrint("📤 Exported JSON saved at: ${file.path}");
 
     return file.path;
   }

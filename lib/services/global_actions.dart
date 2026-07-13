@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'theme_service.dart';
 
-enum GlobalAction { refreshApps, exportGridJson, importGridJson, changeTheme, selectWallpaper }
+enum GlobalAction { setupHome, launcherSettings, refreshApps, exportGridJson, importGridJson }
 
 Future<GlobalAction?> askGlobalAction(BuildContext context) async {
   final themeSvc = Provider.of<ThemeService>(context, listen: false);
@@ -21,44 +21,44 @@ Future<GlobalAction?> askGlobalAction(BuildContext context) async {
           children: [
             const SizedBox(height: 8),
             ListTile(
+              leading: Icon(Icons.grid_view_sharp, color: resolved.iconColor),
+              title: Text(
+                "Set up home",
+                style: TextStyle(color: resolved.textColor),
+              ),
+              onTap: () => Navigator.pop(context, GlobalAction.setupHome),
+            ),
+            ListTile(
+              leading: Icon(Icons.settings, color: resolved.iconColor),
+              title: Text(
+                "Launcher settings",
+                style: TextStyle(color: resolved.textColor),
+              ),
+              onTap: () => Navigator.pop(context, GlobalAction.launcherSettings),
+            ),
+            ListTile(
               leading: Icon(Icons.refresh, color: resolved.iconColor),
               title: Text(
-                "Refresh Apps",
+                "Refresh apps",
                 style: TextStyle(color: resolved.textColor),
               ),
               onTap: () => Navigator.pop(context, GlobalAction.refreshApps),
             ),
             ListTile(
-              leading: Icon(Icons.file_upload, color: resolved.iconColor),
+              leading: Icon(Icons.publish, color: resolved.iconColor),
               title: Text(
-                "Export Grid JSON",
+                "Export grid",
                 style: TextStyle(color: resolved.textColor),
               ),
               onTap: () => Navigator.pop(context, GlobalAction.exportGridJson),
             ),
             ListTile(
-              leading: Icon(Icons.file_download, color: resolved.iconColor),
+              leading: Icon(Icons.download, color: resolved.iconColor),
               title: Text(
-                "Import Grid JSON",
+                "Import grid",
                 style: TextStyle(color: resolved.textColor),
               ),
               onTap: () => Navigator.pop(context, GlobalAction.importGridJson),
-            ),
-            ListTile(
-              leading: Icon(Icons.palette_outlined, color: resolved.iconColor),
-              title: Text(
-                "Change Theme",
-                style: TextStyle(color: resolved.textColor),
-              ),
-              onTap: () => Navigator.pop(context, GlobalAction.changeTheme),
-            ),
-            ListTile(
-              leading: Icon(Icons.wallpaper, color: resolved.iconColor),
-              title: Text(
-                "Choose Wallpaper",
-                style: TextStyle(color: resolved.textColor),
-              ),
-              onTap: () => Navigator.pop(context, GlobalAction.selectWallpaper),
             ),
             const SizedBox(height: 8),
           ],

@@ -1,3 +1,5 @@
+target: file path: ~/programms/flutter/main.jpeg
+
 Objective
 
   - Redesign my Flutter launcher to match the target design as closely as possible while preserving existing functionality.
@@ -225,6 +227,63 @@ While implementing:
 - Unused code, deprecated libraries, and async warnings refactored.
 - Removed unused imports, corrected invalid `MainAxisAlignment` reference, and eliminated unsafe context usage across async boundaries.
 - Preserved search bar, performance, launches, permissions, and layout configuration.
+
+
+Step 9 — Fix Home Screen Grid Overflow
+
+Fix bottom overflow in the home screen grid.
+
+Requirements:
+
+  - Resolve the "BOTTOM OVERFLOWED" layout render error inside each home screen grid cell (as seen in `home-screen3.jpeg`).
+  - Maintain correct typography, spacing, and icon sizes.
+
+**Status (2026-07-12): Completed.**
+- Cleaned up home screen app layout to completely remove the app name text and its leftover commented code blocks inside the `buildTile` widget.
+- Switched the grid cells to a square layout by changing `childAspectRatio` of the home screen `GridView` to `1.0`.
+- Reduced `mainAxisSpacing` from `15` to `12` to bring the icon rows closer together vertically, optimizing spacing in accordance with the target design `main.jpeg`.
+- Verified that static analysis compiles and passes successfully.
+
+
+Step 10 — Time and Date Display
+
+Add the current time, date, and day layout on the home screen to match the target design.
+
+Requirements:
+
+  - Show time in a stacked layout on the left side of the home screen (hours on top, minutes on bottom) using a large font size.
+  - Below the time, display a pill-shaped container showing the current date formatted as `DaySuffix. Month, Year` (e.g., `4th. Jun, 2023`).
+  - Below the date, display `"Today's"` and the current weekday name in large bold text (e.g., `"Today's\nSunday."`).
+  - Color scheme should match the target design (soft pastel green accents for the clock digits).
+  - The display must update in real-time.
+
+**Status (2026-07-12): Completed.**
+- Integrated a stateful `Timer` that ticks every second to maintain a reactive clock state in `_HomeScreenState`.
+- Implemented a custom `_formatDate` helper that formats the date suffix (`st`/`nd`/`rd`/`th`) dynamically without external dependencies.
+- Replaced the left empty space `SizedBox` with a vertically centered (`Alignment.centerLeft`), left-padded column displaying the formatted hour, minutes, date pill, and weekday string to match `target.jpeg`.
+- Styled clock digits as hollow green outlines (pastel green `0xFF8CD8A2` in dark theme, deep green `0xFF2E7D32` in light theme) using a Stroke Paint object with `strokeWidth: 1.8` to match the exact aesthetic of `target.jpeg`.
+- Verified that static analysis compiles and passes successfully.
+
+Step 11 — Home Setup, Arrange System, and Grid Settings
+
+Implement the "Set up home" option in the global actions menu with the same functionality as the nkit-launcher project, and add grid configuration under Launcher settings.
+
+Requirements:
+  - Add the "Set up home" option (grid icon) and group other custom options under a clean sub-menu called "Launcher settings" (settings icon) in the overflow menu matching `update.jpeg`.
+  - Implement a modal bottom sheet displaying two tabs: "Add" and "Arrange".
+  - The "Add" tab must list all installed apps with a search filter, showing checkboxes indicating whether they are pinned to the home screen. Checking/unchecking adds/removes the apps from the home screen in real-time.
+  - The "Arrange" tab must show the current layout of home grid apps, supporting interactive drag-and-drop reordering (repositioning elements via LongPressDraggable and DragTarget) and allowing custom icon selection or removal directly from the arrange tiles.
+  - Save the updated grid positions to SharedPreferences in real-time so that the custom positions persist immediately.
+  - Add options under Launcher settings to dynamically change the number of Home grid columns (max 3) and rows (max 9) using the style of `new.jpeg`. Load and persist these configurations in SharedPreferences, dynamically adjusting the screen layouts and flex sizes.
+
+**Status (2026-07-13): Completed.**
+- Added the "Set up home" option to the global actions popup menu, and consolidated "Change Theme" and "Choose Wallpaper" settings into a clean "Launcher settings" bottom sheet.
+- Created `HomeSetupSheet` with two tabs: "Add" for searching and toggling home apps, and "Arrange" for organizing the apps in the home grid.
+- Implemented drag-and-drop reordering in the "Arrange" grid using `LongPressDraggable` and `DragTarget`, which updates the layout in real-time.
+- Implemented `updatePinnedAppsOrder` inside `InstalledAppsService` to persist the new order of pinned apps to SharedPreferences immediately.
+- Added dropdown selector options for Home grid columns (1 to 3) and rows (1 to 9) in the Launcher Settings modal sheet.
+- Integrated dynamic layout flex scaling and grid bounds capping (to columns * rows) based on the settings, saved to SharedPreferences.
+- Checked compiling and static analysis (0 errors/warnings).
 
 
 Things That Must NOT Change

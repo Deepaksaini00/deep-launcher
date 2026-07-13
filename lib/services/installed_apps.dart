@@ -2,6 +2,7 @@ import 'package:installed_apps/installed_apps.dart';
 import 'package:installed_apps/app_info.dart';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter/foundation.dart';
 
 class InstalledAppsService {
   // List of pinned Apps..
@@ -10,7 +11,7 @@ class InstalledAppsService {
   static const _installedAppsKey = 'installed_apps_cache';
   static List<AppInfo>? _installedCache;
   static List<AppInfo> _cachedPinnedApps = [];
-  static Map<String, String?> _cachedIcons = {};
+  static final Map<String, String?> _cachedIcons = {};
 
   // Save installed apps list to SharedPreferences cache
   static Future<void> _saveInstalledAppsToPrefs(List<AppInfo> apps) async {
@@ -30,7 +31,7 @@ class InstalledAppsService {
       }).toList();
       await prefs.setStringList(_installedAppsKey, list);
     } catch (e) {
-      print("⚠️ Error saving installed apps cache: $e");
+      debugPrint("⚠️ Error saving installed apps cache: $e");
     }
   }
 
@@ -45,7 +46,7 @@ class InstalledAppsService {
         return AppInfo.create(data);
       }).toList();
     } catch (e) {
-      print("⚠️ Error loading installed apps cache: $e");
+      debugPrint("⚠️ Error loading installed apps cache: $e");
       return [];
     }
   }
@@ -68,13 +69,13 @@ class InstalledAppsService {
         excludeNonLaunchableApps: true,
         withIcon: false,
       );
-      print('📱 Installed user apps loaded from system (first run):');
-      print('✅ Total user apps found: ${installedApps.length}');
+      debugPrint('📱 Installed user apps loaded from system (first run):');
+      debugPrint('✅ Total user apps found: ${installedApps.length}');
       _installedCache = installedApps;
       await _saveInstalledAppsToPrefs(installedApps);
       return installedApps;
     } catch (e) {
-      print('⚠️ Error fetching apps: $e');
+      debugPrint('⚠️ Error fetching apps: $e');
       return [];
     }
   }
@@ -88,11 +89,11 @@ class InstalledAppsService {
         excludeNonLaunchableApps: true,
         withIcon: false,
       );
-      print('📱 Refreshed installed user apps from system');
+      debugPrint('📱 Refreshed installed user apps from system');
       _installedCache = installedApps;
       await _saveInstalledAppsToPrefs(installedApps);
     } catch (e) {
-      print('⚠️ Error refreshing apps: $e');
+      debugPrint('⚠️ Error refreshing apps: $e');
     }
   }
   // =====
@@ -117,7 +118,7 @@ class InstalledAppsService {
         _cachedPinnedApps.add(app);
       }
       // _cachedPinnedApps.add(app);
-      print('📌 Pinned app: ${app.name}');
+      debugPrint('📌 Pinned app: ${app.name}');
     }
   }
 
@@ -128,7 +129,38 @@ class InstalledAppsService {
     pinnedApps.removeWhere((a) => jsonDecode(a)['packageName'] == packageName);
     await prefs.setStringList(_pinnedKey, pinnedApps);
     _cachedPinnedApps.removeWhere((a) => a.packageName == packageName);
-    print("🗑 Removed $packageName");
+    debugPrint("🗑 Removed $packageName");
+  }
+
+  // Update pinned apps order
+  static Future<void> updatePinnedAppsOrder(List<AppInfo> apps) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    List<String> currentPinned = prefs.getStringList(_pinnedKey) ?? [];
+    List<String> newPinnedList = [];
+    
+    for (var app in apps) {
+      String? found;
+      for (var jsonStr in currentPinned) {
+        try {
+          final data = jsonDecode(jsonStr);
+          if (data['packageName'] == app.packageName) {
+            found = jsonStr;
+            break;
+          }
+        } catch (_) {}
+      }
+      if (found != null) {
+        newPinnedList.add(found);
+      } else {
+        newPinnedList.add(jsonEncode({
+          "packageName": app.packageName,
+          "name": app.name,
+          "iconSlug": null,
+        }));
+      }
+    }
+    await prefs.setStringList(_pinnedKey, newPinnedList);
+    _cachedPinnedApps = List.from(apps);
   }
 
   // Get all Pinned Apps...!!
@@ -167,7 +199,7 @@ class InstalledAppsService {
           }
         }
       } catch (e) {
-        print(">>> ❌ JSON error: $e → $item");
+        debugPrint(">>> ❌ JSON error: $e → $item");
       }
     }
     if (validPinnedApps.length != pinnedApps.length) {
@@ -237,7 +269,7 @@ class InstalledAppsService {
       final decoded = jsonDecode(jsonString);
       // decoded must be a List of objects
       if (decoded is! List) {
-        print("❌ Imported JSON is not a list");
+        debugPrint("❌ Imported JSON is not a list");
         return;
       }
       List<String> newList = decoded.map<String>((map) {
@@ -251,7 +283,7 @@ class InstalledAppsService {
       }).toList();
 
       await prefs.setStringList(_pinnedKey, newList);
-      print("📥 Imported ${newList.length} pinned apps");
+      debugPrint("📥 Imported ${newList.length} pinned apps");
       _cachedPinnedApps = [];
       _cachedIcons.clear();
       for (var item in newList) {
@@ -271,7 +303,7 @@ class InstalledAppsService {
         }
       }
     } catch (e) {
-      print("<<<< Error Importing pinned apps: $e");
+      debugPrint("<<<< Error Importing pinned apps: $e");
     }
   }
 
@@ -279,14 +311,14 @@ class InstalledAppsService {
     final prefs = await SharedPreferences.getInstance();
     final pinned = prefs.getStringList(_pinnedKey) ?? [];
 
-    print("🟢 PINNED APPS (Parsed):");
+    debugPrint("🟢 PINNED APPS (Parsed):");
 
     for (var item in pinned) {
       try {
         final data = jsonDecode(item);
-        print("Package: ${data['packageName']}, Icon: ${data['iconSlug']}");
+        debugPrint("Package: ${data['packageName']}, Icon: ${data['iconSlug']}");
       } catch (e) {
-        print("--- Invalid JSON: $item");
+        debugPrint("--- Invalid JSON: $item");
       }
     }
   }
