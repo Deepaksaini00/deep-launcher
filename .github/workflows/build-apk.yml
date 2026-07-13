@@ -5,6 +5,64 @@ on:
   push:
     tags:
       - v*
+permissions:
+  contents: write
+
+# Jobs to Run
 jobs:
   build:
+    # Specify the type of runner (virtual machine) to use
     runs-on: ubuntu-latest
+
+    # List the sequential steps to execute
+    steps:
+      # Download the repo code into the runner
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      # setUp a runtime environment
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.24.0"
+          cache: true
+      - name: Install Dependencies
+        run: flutter pub get
+
+      - name: Set version from tag
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          sed -i "s/^version: .*/version: ${VERSION}+${GITHUB_RUN_NUMBER}/" pubspec.yaml
+
+      - name: Build Release APK
+        run: flutter build apk --release
+
+      - name: Rename APK
+        id: apk
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          APK_NAME="deep-launcher-${VERSION}.apk"
+          mv build/app/outputs/flutter-apk/app-release.apk build/app/outputs/flutter-apk/${APK_NAME}
+
+          echo "apk_name=${APK_NAME}" >> "$GITHUB_OUTPUT"
+          echo "apk_path=build/app/outputs/flutter-apk/${APK_NAME}" >> "$GITHUB_OUTPUT"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: Release ${{ github.ref_name }}
+          generate_release_notes: true
+          files: ${{ steps.apk.outputs.apk_path }}
+
+      - name: Upload APK as Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.apk.outputs.apk_name }}
+          path: ${{ steps.apk.outputs.apk_path }}
