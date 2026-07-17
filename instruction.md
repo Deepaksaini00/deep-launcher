@@ -293,3 +293,21 @@ Things That Must NOT Change
  - Existing app launching functionality
  - Existing permissions
  - Existing package structure (unless refactoring is necessary)
+
+
+
+
+----  Bugs and Features ----
+
+- Bugs:
+  1. The wallpaper option in launcher setting not work. i select wallpaper but not apply on screen.
+  2. when i search an app the list shown here do 2 things --
+      - one is give some border or style just shown in image ( ~/programms/flutter/search-design.jpeg)
+      - second is , currently i search an app it shows the match result top of the screen like normal launcher shows but i want that the search top result will shown just above the keyboard screen means the end to the search results.
+      
+  3. in the 3 dots of search bar, the first option is set up home in this option we have a Add apk to screen functionality that work good but only one issue that is it not shown the app icons , so add app icons the actual app icons.
+
+- Features: 
+
+  1. give dark and lite wallpaper option just like the nkit-launcher have(~/programms/flutter/nkit-launcher)
+  2. if wallpaper is dark then the clock / time/ day will shown in lite text. and if wallpaper is lite then they shown in dark so easily visible.

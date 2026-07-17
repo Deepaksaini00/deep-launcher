@@ -30,7 +30,7 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: "3.24.0"
+          flutter-version: "3.44.6"
           cache: true
       - name: Install Dependencies
         run: flutter pub get
@@ -40,6 +40,14 @@ jobs:
           VERSION="${GITHUB_REF_NAME#v}"
           sed -i "s/^version: .*/version: ${VERSION}+${GITHUB_RUN_NUMBER}/" pubspec.yaml
 
+
+      - name: Decode Keystore and key.properties
+        run: |
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > android/app/release-key.jks
+          echo "${{ secrets.KEY_PROPERTIES }}" > android/key.properties
+
+
+      
       - name: Build Release APK
         run: flutter build apk --release
 
