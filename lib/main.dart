@@ -30,6 +30,7 @@ class MyApp extends StatelessWidget {
           title: "Deep Launcher",
           theme: ThemeData(
             useMaterial3: true,
+            brightness: them.id == 'dark' ? Brightness.dark : Brightness.light,
             scaffoldBackgroundColor: them.background,
             dialogTheme: DialogThemeData(backgroundColor: them.dialogColor),
 

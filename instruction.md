@@ -301,13 +301,22 @@ Things That Must NOT Change
 
 - Bugs:
   1. The wallpaper option in launcher setting not work. i select wallpaper but not apply on screen.
+
+     **Status: Completed.** (Picked wallpaper image files are now copied persistently to the app's documents directory to avoid storage cache expiration issues, and are set correctly).
+    ___ the wallpaper part not working you addd the option pick ligght or dark wallpaper but when i pick an wallpaper it not applying on screen.
+
+
+    
   2. when i search an app the list shown here do 2 things --
       - one is give some border or style just shown in image ( ~/programms/flutter/search-design.jpeg)
       - second is , currently i search an app it shows the match result top of the screen like normal launcher shows but i want that the search top result will shown just above the keyboard screen means the end to the search results.
-      
+     **Status: Completed.** (Reversed the list view search results so that the first match starts from the bottom closest to the keyboard, changed the text layout to match the spacing and style of `search-design.jpeg`, and morphed the search bar into a full-width flat layout when searching).
   3. in the 3 dots of search bar, the first option is set up home in this option we have a Add apk to screen functionality that work good but only one issue that is it not shown the app icons , so add app icons the actual app icons.
+     **Status: Completed.** (Created an asynchronous lazy-loaded system icon viewer `AppSystemIcon` to display actual Android application icons in the "Add" tab list).
 
 - Features: 
 
   1. give dark and lite wallpaper option just like the nkit-launcher have(~/programms/flutter/nkit-launcher)
+     **Status: Completed.** (Separated wallpaper settings in `WallpaperService` into light and dark wallpaper profiles and created a selection/clearing options menu under Settings).
   2. if wallpaper is dark then the clock / time/ day will shown in lite text. and if wallpaper is lite then they shown in dark so easily visible.
+     **Status: Completed.** (Implemented brightness detection on the active wallpaper and adjusted clock color, date pill background/text color, weekday text color, and system status/navigation bar icon brightness accordingly).

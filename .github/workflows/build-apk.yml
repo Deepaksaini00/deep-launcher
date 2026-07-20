@@ -32,13 +32,13 @@ jobs:
         with:
           flutter-version: "3.44.6"
           cache: true
-      - name: Install Dependencies
-        run: flutter pub get
-
       - name: Set version from tag
         run: |
           VERSION="${GITHUB_REF_NAME#v}"
           sed -i "s/^version: .*/version: ${VERSION}+${GITHUB_RUN_NUMBER}/" pubspec.yaml
+
+      - name: Install Dependencies
+        run: flutter pub get
 
 
       - name: Decode Keystore and key.properties

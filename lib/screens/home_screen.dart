@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 import 'dart:ui';
+import 'package:flutter/services.dart';
 import 'package:android_launcher/icons/app_icons.dart';
 import 'package:android_launcher/services/global_actions.dart';
 import 'package:android_launcher/services/installed_apps.dart';
@@ -168,17 +169,10 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   Widget buildTile(AppInfo app) {
-    final theme = Provider.of<ThemeService>(
-      context,
-      listen: false,
-    ).resolvedTheme(context);
     String? iconKey = InstalledAppsService.getSavedIconSync(app.packageName);
     IconData iconToShow = icons[iconKey] ?? defaultIcon;
 
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final iconBgColor = isDark
-        ? Colors.white.withValues(alpha: 0.15)
-        : Colors.white.withValues(alpha: 0.65);
+    final iconBgColor = Colors.white.withValues(alpha: 0.65);
 
     return InkWell(
       borderRadius: BorderRadius.circular(20),
@@ -200,7 +194,7 @@ class _HomeScreenState extends State<HomeScreen>
             shape: BoxShape.circle,
           ),
           child: Center(
-            child: Icon(iconToShow, size: 28, color: theme.iconColor),
+            child: Icon(iconToShow, size: 28, color: Colors.black87),
           ),
         ),
       ),
@@ -215,13 +209,26 @@ class _HomeScreenState extends State<HomeScreen>
     super.build(context);
     final theme = Provider.of<ThemeService>(context).resolvedTheme(context);
     final wallpaper = Provider.of<WallpaperService>(context);
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final isDark = theme.id == 'dark';
+
+    final bool useDarkText = wallpaper.hasWallpaper(isDark)
+        ? !wallpaper.isActiveWallpaperDark(isDark)
+        : !isDark;
+
+    SystemChrome.setSystemUIOverlayStyle(
+      SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: useDarkText ? Brightness.dark : Brightness.light,
+        systemNavigationBarColor: Colors.transparent,
+        systemNavigationBarIconBrightness: useDarkText ? Brightness.dark : Brightness.light,
+      ),
+    );
 
     int displayHour = _currentTime.hour % 12;
     if (displayHour == 0) displayHour = 12;
     final hourStr = displayHour.toString().padLeft(2, '0');
     final minuteStr = _currentTime.minute.toString().padLeft(2, '0');
-    final clockColor = isDark ? const Color(0xFF8CD8A2) : const Color(0xFF2E7D32);
+    final clockColor = isDark ? Colors.white : Colors.black;
 
     const weekdays = [
       'Monday',
@@ -268,36 +275,35 @@ class _HomeScreenState extends State<HomeScreen>
         body: Stack(
           children: [
             // 1. Wallpaper Background
-            if (wallpaper.hasWallpaper)
+            if (wallpaper.hasWallpaper(isDark))
               Positioned.fill(
                 child: Stack(
                   fit: StackFit.expand,
                   children: [
                     ClipRect(
                       child: Transform.scale(
-                        scale: wallpaper.cropScale,
-                        alignment: Alignment(wallpaper.cropX, wallpaper.cropY),
+                        scale: wallpaper.getCropScale(isDark),
+                        alignment: Alignment(wallpaper.getCropX(isDark), wallpaper.getCropY(isDark)),
                         child: Image.file(
-                          File(wallpaper.path!),
+                          File(wallpaper.getPath(isDark)!),
                           fit: BoxFit.cover,
                           alignment: Alignment(
-                            wallpaper.cropX,
-                            wallpaper.cropY,
+                            wallpaper.getCropX(isDark),
+                            wallpaper.getCropY(isDark),
                           ),
                         ),
                       ),
                     ),
-                    if (wallpaper.frosted && wallpaper.frostBlur > 0)
+                    if (wallpaper.getFrosted(isDark) && wallpaper.getFrostBlur(isDark) > 0)
                       ClipRect(
                         child: BackdropFilter(
                           filter: ImageFilter.blur(
-                            sigmaX: wallpaper.frostBlur,
-                            sigmaY: wallpaper.frostBlur,
+                            sigmaX: wallpaper.getFrostBlur(isDark),
+                            sigmaY: wallpaper.getFrostBlur(isDark),
                           ),
                           child: Container(
-                            // ignore: deprecated_member_use
-                            color: Colors.black.withOpacity(
-                              wallpaper.frostOpacity,
+                            color: Colors.black.withValues(
+                              alpha: wallpaper.getFrostOpacity(isDark),
                             ),
                           ),
                         ),
@@ -309,6 +315,7 @@ class _HomeScreenState extends State<HomeScreen>
             // 2. Main Content
             Column(
               children: [
+                SizedBox(height: MediaQuery.of(context).padding.top + 8),
                 Expanded(
                   child: Row(
                     children: [
@@ -328,16 +335,12 @@ class _HomeScreenState extends State<HomeScreen>
                                 mainAxisSize: MainAxisSize.min,
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  // Stacked hour & minute
                                   Text(
                                     hourStr,
                                     style: TextStyle(
                                       fontSize: 64,
                                       fontWeight: FontWeight.bold,
-                                      foreground: Paint()
-                                        ..style = PaintingStyle.stroke
-                                        ..strokeWidth = 1.8
-                                        ..color = clockColor,
+                                      color: clockColor,
                                       height: 0.9,
                                     ),
                                   ),
@@ -346,33 +349,34 @@ class _HomeScreenState extends State<HomeScreen>
                                     style: TextStyle(
                                       fontSize: 64,
                                       fontWeight: FontWeight.bold,
-                                      foreground: Paint()
-                                        ..style = PaintingStyle.stroke
-                                        ..strokeWidth = 1.8
-                                        ..color = clockColor,
+                                      color: clockColor,
                                       height: 0.9,
                                     ),
                                   ),
                                   const SizedBox(height: 18),
                                   // Date Pill
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 10,
-                                      vertical: 5,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: isDark
-                                          ? Colors.white.withValues(alpha: 0.12)
-                                          : Colors.black.withValues(alpha: 0.08),
-                                      borderRadius: BorderRadius.circular(15),
-                                    ),
-                                    child: Text(
-                                      _formatDate(_currentTime),
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w500,
-                                        color: theme.textColor.withValues(
-                                          alpha: 0.8,
+                                  ClipRRect(
+                                    borderRadius: BorderRadius.circular(15),
+                                    child: BackdropFilter(
+                                      filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 10,
+                                          vertical: 5,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: isDark
+                                              ? Colors.white.withValues(alpha: 0.15)
+                                              : Colors.black.withValues(alpha: 0.08),
+                                          borderRadius: BorderRadius.circular(15),
+                                        ),
+                                        child: Text(
+                                          _formatDate(_currentTime),
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.bold,
+                                            color: isDark ? Colors.white : Colors.black,
+                                          ),
                                         ),
                                       ),
                                     ),
@@ -384,7 +388,7 @@ class _HomeScreenState extends State<HomeScreen>
                                     style: TextStyle(
                                       fontSize: 28,
                                       fontWeight: FontWeight.w700,
-                                      color: theme.textColor,
+                                      color: isDark ? Colors.white : Colors.black,
                                       height: 1.15,
                                     ),
                                   ),
@@ -436,12 +440,12 @@ class _HomeScreenState extends State<HomeScreen>
                     borderRadius: BorderRadius.circular(50.0),
                     child: BackdropFilter(
                       filter: ImageFilter.blur(
-                        sigmaX: wallpaper.hasWallpaper ? 10 : 0,
-                        sigmaY: wallpaper.hasWallpaper ? 10 : 0,
+                        sigmaX: wallpaper.hasWallpaper(isDark) ? 10 : 0,
+                        sigmaY: wallpaper.hasWallpaper(isDark) ? 10 : 0,
                       ),
                       child: Container(
                         decoration: BoxDecoration(
-                          color: wallpaper.hasWallpaper
+                          color: wallpaper.hasWallpaper(isDark)
                               ? theme.background.withValues(
                                   alpha: isDark ? 0.45 : 0.35,
                                 )
@@ -449,7 +453,7 @@ class _HomeScreenState extends State<HomeScreen>
                                     ? Colors.white.withValues(alpha: 0.12)
                                     : Colors.black.withValues(alpha: 0.08)),
                           borderRadius: BorderRadius.circular(50.0),
-                          border: wallpaper.hasWallpaper
+                          border: wallpaper.hasWallpaper(isDark)
                               ? Border.all(
                                   color: theme.textColor.withValues(
                                     alpha: 0.15,
@@ -570,42 +574,67 @@ class _HomeScreenState extends State<HomeScreen>
                 top: 0,
                 left: 0,
                 right: 0,
-                bottom: 80,
+                bottom: 72,
                 child: ClipRect(
                   child: BackdropFilter(
                     filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
                     child: Container(
                       color: theme.background.withValues(
-                        alpha: wallpaper.hasWallpaper
+                        alpha: wallpaper.hasWallpaper(isDark)
                             ? (isDark ? 0.45 : 0.35)
                             : 0.95,
                       ),
-                      child: ListView.builder(
-                        padding: const EdgeInsets.only(top: 20, bottom: 30),
-                        itemCount: filteredApps.length,
-                        itemBuilder: (context, index) {
-                          final app = filteredApps[index];
-                          return ListTile(
-                            title: Text(
-                              app.name,
-                              style: TextStyle(
-                                color: theme.textColor,
-                                fontWeight: FontWeight.w500,
+                      child: Column(
+                        children: [
+                          Container(
+                            height: MediaQuery.of(context).padding.top + 8,
+                            decoration: BoxDecoration(
+                              border: Border(
+                                bottom: BorderSide(
+                                  color: theme.textColor.withValues(
+                                    alpha: 0.15,
+                                  ),
+                                  width: 1.5,
+                                ),
                               ),
                             ),
-                            onTap: () async {
-                              setState(() {
-                                isSearching = false;
-                                searchController.clear();
-                                filteredApps = installedApps;
-                              });
-                              await InstalledApps.startApp(app.packageName);
-                            },
-                            onLongPress: () {
-                              AppDialogs.appDialogBox(context, app, _loadApps);
-                            },
-                          );
-                        },
+                          ),
+                          Expanded(
+                            child: ListView.builder(
+                              reverse: searchController.text.isNotEmpty,
+                              padding: const EdgeInsets.only(top: 10, bottom: 20),
+                              itemCount: filteredApps.length,
+                              itemBuilder: (context, index) {
+                                final app = filteredApps[index];
+                                return ListTile(
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 24,
+                                    vertical: 6,
+                                  ),
+                                  title: Text(
+                                    app.name,
+                                    style: TextStyle(
+                                      color: theme.textColor,
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w400,
+                                    ),
+                                  ),
+                                  onTap: () async {
+                                    setState(() {
+                                      isSearching = false;
+                                      searchController.clear();
+                                      filteredApps = installedApps;
+                                    });
+                                    await InstalledApps.startApp(app.packageName);
+                                  },
+                                  onLongPress: () {
+                                    AppDialogs.appDialogBox(context, app, _loadApps);
+                                  },
+                                );
+                              },
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
@@ -617,23 +646,97 @@ class _HomeScreenState extends State<HomeScreen>
     );
   }
 
-  Future<void> _pickAndOpenWallpaperEditor(BuildContext context) async {
+  Future<void> _pickAndOpenWallpaperEditor(BuildContext context, {required bool isDark}) async {
     try {
       final result = await FilePicker.platform.pickFiles(type: FileType.image);
-      if (result == null || result.files.single.path == null) return;
+      if (result == null || result.files.isEmpty) {
+        debugPrint("File picking canceled or returned no files.");
+        return;
+      }
+      final path = result.files.single.path;
+      if (path == null) {
+        debugPrint("Picked file path is null.");
+        return;
+      }
 
-      if (!context.mounted) return;
+      if (!context.mounted) {
+        debugPrint("Context is not mounted when opening wallpaper editor.");
+        return;
+      }
 
       await Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) =>
-              WallpaperEditor(path: result.files.single.path!),
+          builder: (editorContext) =>
+              WallpaperEditor(
+                path: path,
+                isDark: isDark,
+              ),
         ),
       );
-    } catch (e) {
-      // ignore
+    } catch (e, stackTrace) {
+      debugPrint("Error in _pickAndOpenWallpaperEditor: $e\n$stackTrace");
     }
+  }
+
+  void _showWallpaperOptionsDialog(BuildContext context) {
+    final theme = Provider.of<ThemeService>(context, listen: false).resolvedTheme(context);
+    final wallpaper = Provider.of<WallpaperService>(context, listen: false);
+    showDialog(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          backgroundColor: theme.dialogColor,
+          title: Text('Wallpaper Settings', style: TextStyle(color: theme.textColor)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: Icon(Icons.wb_sunny_outlined, color: theme.iconColor),
+                title: Text('Pick Light Wallpaper', style: TextStyle(color: theme.textColor)),
+                onTap: () {
+                  Navigator.pop(dialogContext);
+                  _pickAndOpenWallpaperEditor(context, isDark: false);
+                },
+              ),
+              ListTile(
+                leading: Icon(Icons.nightlight_round_outlined, color: theme.iconColor),
+                title: Text('Pick Dark Wallpaper', style: TextStyle(color: theme.textColor)),
+                onTap: () {
+                  Navigator.pop(dialogContext);
+                  _pickAndOpenWallpaperEditor(context, isDark: true);
+                },
+              ),
+              const Divider(),
+              ListTile(
+                leading: const Icon(Icons.clear, color: Colors.redAccent),
+                title: Text('Clear Light Wallpaper', style: TextStyle(color: theme.textColor)),
+                onTap: () async {
+                  await wallpaper.clearWallpaper(false);
+                  if (dialogContext.mounted) Navigator.pop(dialogContext);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.clear, color: Colors.redAccent),
+                title: Text('Clear Dark Wallpaper', style: TextStyle(color: theme.textColor)),
+                onTap: () async {
+                  await wallpaper.clearWallpaper(true);
+                  if (dialogContext.mounted) Navigator.pop(dialogContext);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.delete_forever, color: Colors.red),
+                title: Text('Clear All Wallpapers', style: TextStyle(color: theme.textColor)),
+                onTap: () async {
+                  await wallpaper.clearAll();
+                  if (dialogContext.mounted) Navigator.pop(dialogContext);
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   Future<void> _showLauncherSettings(BuildContext context) {
@@ -644,9 +747,9 @@ class _HomeScreenState extends State<HomeScreen>
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (context) {
+      builder: (sheetContext) {
         return StatefulBuilder(
-          builder: (context, setModalState) {
+          builder: (modalContext, setModalState) {
             return SafeArea(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -659,7 +762,7 @@ class _HomeScreenState extends State<HomeScreen>
                       style: TextStyle(color: theme.textColor),
                     ),
                     onTap: () {
-                      Navigator.pop(context);
+                      Navigator.pop(modalContext);
                       showThemePickerDialog(context);
                     },
                   ),
@@ -670,8 +773,8 @@ class _HomeScreenState extends State<HomeScreen>
                       style: TextStyle(color: theme.textColor),
                     ),
                     onTap: () {
-                      Navigator.pop(context);
-                      _pickAndOpenWallpaperEditor(context);
+                      Navigator.pop(modalContext);
+                      _showWallpaperOptionsDialog(context);
                     },
                   ),
                   const Divider(),

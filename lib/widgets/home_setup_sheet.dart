@@ -1,9 +1,11 @@
+import 'dart:typed_data';
 import 'package:android_launcher/icons/app_icons.dart';
 import 'package:android_launcher/services/installed_apps.dart';
 import 'package:android_launcher/services/theme_service.dart';
 import 'package:android_launcher/widgets/dialog_box.dart';
 import 'package:flutter/material.dart';
 import 'package:installed_apps/app_info.dart';
+import 'package:installed_apps/installed_apps.dart';
 import 'package:provider/provider.dart';
 
 class HomeSetupSheet extends StatefulWidget {
@@ -124,10 +126,17 @@ class _HomeSetupSheetState extends State<HomeSetupSheet> {
                   width: 40,
                   height: 40,
                   decoration: BoxDecoration(
-                    color: theme.textColor.withValues(alpha: 0.1),
+                    color: Colors.white.withValues(alpha: 0.65),
                     shape: BoxShape.circle,
                   ),
-                  child: Icon(iconToShow, size: 22, color: theme.iconColor),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(20),
+                    child: AppSystemIcon(
+                      packageName: app.packageName,
+                      fallback: iconToShow,
+                      iconColor: Colors.black87,
+                    ),
+                  ),
                 ),
                 value: isOnGrid,
                 title: Text(
@@ -248,10 +257,10 @@ class _HomeSetupSheetState extends State<HomeSetupSheet> {
                                   width: 44,
                                   height: 44,
                                   decoration: BoxDecoration(
-                                    color: theme.textColor.withValues(alpha: 0.05),
+                                    color: Colors.white.withValues(alpha: 0.65),
                                     shape: BoxShape.circle,
                                   ),
-                                  child: Icon(iconToShow, size: 24, color: theme.iconColor),
+                                  child: Icon(iconToShow, size: 24, color: Colors.black87),
                                 ),
                                 const SizedBox(height: 6),
                                 Padding(
@@ -333,5 +342,97 @@ class _HomeSetupSheetState extends State<HomeSetupSheet> {
         ),
       ],
     );
+  }
+}
+
+class AppSystemIcon extends StatefulWidget {
+  final String packageName;
+  final double size;
+  final IconData fallback;
+  final Color iconColor;
+
+  const AppSystemIcon({
+    super.key,
+    required this.packageName,
+    this.size = 22,
+    required this.fallback,
+    required this.iconColor,
+  });
+
+  @override
+  State<AppSystemIcon> createState() => _AppSystemIconState();
+}
+
+class _AppSystemIconState extends State<AppSystemIcon> {
+  static final Map<String, Uint8List?> _iconCache = {};
+  bool _loading = false;
+  Uint8List? _iconBytes;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadIcon();
+  }
+
+  void _loadIcon() async {
+    final pkg = widget.packageName;
+    if (_iconCache.containsKey(pkg)) {
+      if (mounted) {
+        setState(() {
+          _iconBytes = _iconCache[pkg];
+        });
+      }
+      return;
+    }
+
+    if (mounted) {
+      setState(() => _loading = true);
+    }
+
+    try {
+      final app = await InstalledApps.getAppInfo(pkg);
+      if (app != null && app.icon != null) {
+        _iconCache[pkg] = app.icon;
+        if (mounted) {
+          setState(() {
+            _iconBytes = app.icon;
+            _loading = false;
+          });
+        }
+      } else {
+        _iconCache[pkg] = null;
+        if (mounted) {
+          setState(() => _loading = false);
+        }
+      }
+    } catch (_) {
+      _iconCache[pkg] = null;
+      if (mounted) {
+        setState(() => _loading = false);
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_iconBytes != null) {
+      return Image.memory(
+        _iconBytes!,
+        width: widget.size,
+        height: widget.size,
+        fit: BoxFit.contain,
+      );
+    }
+    if (_loading) {
+      return SizedBox(
+        width: widget.size,
+        height: widget.size,
+        child: const Padding(
+          padding: EdgeInsets.all(4.0),
+          child: CircularProgressIndicator(strokeWidth: 1.5),
+        ),
+      );
+    }
+    return Icon(widget.fallback, size: widget.size, color: widget.iconColor);
   }
 }
