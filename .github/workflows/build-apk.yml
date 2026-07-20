@@ -42,9 +42,12 @@ jobs:
 
 
       - name: Decode Keystore and key.properties
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          KEY_PROPERTIES: ${{ secrets.KEY_PROPERTIES }}
         run: |
-          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > android/app/release-key.jks
-          echo "${{ secrets.KEY_PROPERTIES }}" > android/key.properties
+          echo "$KEYSTORE_BASE64" | base64 -d > android/app/release-key.jks
+          echo "$KEY_PROPERTIES" > android/key.properties
 
 
       
