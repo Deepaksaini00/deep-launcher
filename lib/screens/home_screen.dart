@@ -16,7 +16,6 @@ import 'package:android_launcher/widgets/home_setup_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:installed_apps/app_info.dart';
-import 'package:installed_apps/installed_apps.dart';
 import 'package:provider/provider.dart';
 import 'package:file_picker/file_picker.dart';
 
@@ -181,7 +180,7 @@ class _HomeScreenState extends State<HomeScreen>
 
     return InkWell(
       borderRadius: BorderRadius.circular(20),
-      onTap: () async => await InstalledApps.startApp(app.packageName),
+      onTap: () async => await InstalledAppsService.startApp(app.packageName),
       onLongPress: () {
         AppDialogs.pinnedDialogBox(
           context,
@@ -663,7 +662,7 @@ class _HomeScreenState extends State<HomeScreen>
                                     print(
                                       "********************************************8**** At line 687",
                                     );
-                                    await InstalledApps.startApp(
+                                    await InstalledAppsService.startApp(
                                       app.packageName,
                                     );
                                   },

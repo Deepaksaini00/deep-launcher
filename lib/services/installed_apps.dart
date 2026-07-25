@@ -3,6 +3,7 @@ import 'package:installed_apps/app_info.dart';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/foundation.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class InstalledAppsService {
   // List of pinned Apps..
@@ -53,31 +54,57 @@ class InstalledAppsService {
 
   // Fetch and print Installed apps...
   static Future<List<AppInfo>> getInstalledApps() async {
-    if (_installedCache != null) return _installedCache!;
-    
-    // Try to load from persistent cache first
-    final cached = await _loadInstalledAppsFromPrefs();
-    if (cached.isNotEmpty) {
-      _installedCache = cached;
-      return cached;
+    List<AppInfo> apps = [];
+    if (_installedCache != null) {
+      apps = List<AppInfo>.from(_installedCache!);
+    } else {
+      // Try to load from persistent cache first
+      final cached = await _loadInstalledAppsFromPrefs();
+      if (cached.isNotEmpty) {
+        _installedCache = cached;
+        apps = List<AppInfo>.from(cached);
+      } else {
+        try {
+          List<AppInfo> installedApps = await InstalledApps.getInstalledApps(
+            excludeSystemApps: false,
+            excludeNonLaunchableApps: true,
+            withIcon: false,
+          );
+          _installedCache = installedApps;
+          await _saveInstalledAppsToPrefs(installedApps);
+          apps = List<AppInfo>.from(installedApps);
+        } catch (e) {
+          debugPrint('⚠️ Error fetching apps: $e');
+        }
+      }
     }
 
+    // Now append custom shortcuts
     try {
-      // List of Installed apps..
-      List<AppInfo> installedApps = await InstalledApps.getInstalledApps(
-        excludeSystemApps: false,
-        excludeNonLaunchableApps: true,
-        withIcon: false,
-      );
-      debugPrint('📱 Installed user apps loaded from system (first run):');
-      debugPrint('✅ Total user apps found: ${installedApps.length}');
-      _installedCache = installedApps;
-      await _saveInstalledAppsToPrefs(installedApps);
-      return installedApps;
+      final shortcuts = await getCustomShortcuts();
+      final SharedPreferences prefs = await SharedPreferences.getInstance();
+      for (var shortcut in shortcuts) {
+        final pkg = shortcut["packageName"] as String;
+        // Cache the icon if not already cached
+        if (!_cachedIcons.containsKey(pkg)) {
+          _cachedIcons[pkg] = prefs.getString(pkg);
+        }
+        apps.add(AppInfo.create({
+          "name": shortcut["name"],
+          "package_name": pkg,
+          "version_name": "1.0.0",
+          "version_code": 1,
+          "platform_type": "android",
+          "installed_timestamp": 0,
+          "is_system_app": false,
+          "is_launchable_app": true,
+        }));
+      }
     } catch (e) {
-      debugPrint('⚠️ Error fetching apps: $e');
-      return [];
+      debugPrint("⚠️ Error appending shortcuts: $e");
     }
+
+    return apps;
   }
 
   static Future<void> refreshInstalledApps() async {
@@ -320,6 +347,105 @@ class InstalledAppsService {
       } catch (e) {
         debugPrint("--- Invalid JSON: $item");
       }
+    }
+  }
+
+  // ===== CUSTOM SHORTCUTS SERVICES =====
+  static const _shortcutsKey = 'custom_shortcuts';
+
+  // Get custom shortcuts
+  static Future<List<Map<String, dynamic>>> getCustomShortcuts() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    final List<String> list = prefs.getStringList(_shortcutsKey) ?? [];
+    return list.map((item) {
+      try {
+        return jsonDecode(item) as Map<String, dynamic>;
+      } catch (_) {
+        return <String, dynamic>{};
+      }
+    }).where((element) => element.isNotEmpty).toList();
+  }
+
+  // Add custom shortcut
+  static Future<void> addCustomShortcut(String name, String url, String iconKey) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    List<String> list = prefs.getStringList(_shortcutsKey) ?? [];
+    
+    // Ensure URL has a scheme, default to https://
+    var formattedUrl = url.trim();
+    if (!formattedUrl.startsWith('http://') && !formattedUrl.startsWith('https://')) {
+      formattedUrl = 'https://$formattedUrl';
+    }
+
+    final packageName = 'shortcut:$formattedUrl';
+    final newItem = {
+      "packageName": packageName,
+      "name": name.trim(),
+    };
+
+    // Avoid duplicate packageNames
+    list.removeWhere((item) {
+      try {
+        return jsonDecode(item)['packageName'] == packageName;
+      } catch (_) {
+        return false;
+      }
+    });
+
+    list.add(jsonEncode(newItem));
+    await prefs.setStringList(_shortcutsKey, list);
+    
+    // Save icon choice
+    await saveIcons(packageName, iconKey);
+
+    // Clear caches to force reload
+    _installedCache = null;
+    _cachedPinnedApps = [];
+  }
+
+  // Delete custom shortcut
+  static Future<void> deleteCustomShortcut(String packageName) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    List<String> list = prefs.getStringList(_shortcutsKey) ?? [];
+    
+    list.removeWhere((item) {
+      try {
+        return jsonDecode(item)['packageName'] == packageName;
+      } catch (_) {
+        return false;
+      }
+    });
+
+    await prefs.setStringList(_shortcutsKey, list);
+    
+    // Also remove from pinned if it was pinned
+    await removePinned(packageName);
+
+    // Clean up icon preference
+    await prefs.remove(packageName);
+    _cachedIcons.remove(packageName);
+
+    // Clear cache
+    _installedCache = null;
+    _cachedPinnedApps = [];
+  }
+
+  // Intercept and launch shortcuts
+  static Future<void> startApp(String packageName) async {
+    if (packageName.startsWith('shortcut:')) {
+      final url = packageName.replaceFirst('shortcut:', '');
+      try {
+        final uri = Uri.parse(url);
+        if (await canLaunchUrl(uri)) {
+          await launchUrl(uri, mode: LaunchMode.externalApplication);
+        } else {
+          await launchUrl(uri, mode: LaunchMode.externalApplication);
+        }
+      } catch (e) {
+        debugPrint("Error launching shortcut: $e");
+      }
+    } else {
+      await InstalledApps.startApp(packageName);
     }
   }
 }
