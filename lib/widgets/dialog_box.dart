@@ -19,7 +19,10 @@ class AppDialogs {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20.0),
           ),
-          title: Text(app.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+          title: Text(
+            app.name,
+            style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -37,7 +40,9 @@ class AppDialogs {
                 },
               ),
               ListTile(
-                leading: Icon(app.isSystemApp ? Icons.info_outline : Icons.delete_forever),
+                leading: Icon(
+                  app.isSystemApp ? Icons.info_outline : Icons.delete_forever,
+                ),
                 title: Text(
                   app.isSystemApp ? "App Info" : "Delete App",
                   style: TextStyle(
@@ -74,7 +79,10 @@ class AppDialogs {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20.0),
         ),
-        title: Text(app.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+        title: Text(
+          app.name,
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -107,7 +115,9 @@ class AppDialogs {
               },
             ),
             ListTile(
-              leading: Icon(app.isSystemApp ? Icons.info_outline : Icons.delete_forever),
+              leading: Icon(
+                app.isSystemApp ? Icons.info_outline : Icons.delete_forever,
+              ),
               title: Text(
                 app.isSystemApp ? "App Info" : "Delete App",
                 style: TextStyle(

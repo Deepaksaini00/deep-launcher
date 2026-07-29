@@ -69,7 +69,8 @@ class _HomeScreenState extends State<HomeScreen>
         });
       }
     } else {
-      if (isSearching) {
+      final isCurrentRoute = ModalRoute.of(context)?.isCurrent ?? true;
+      if (isSearching && isCurrentRoute) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (mounted) {
             setState(() {
@@ -151,7 +152,17 @@ class _HomeScreenState extends State<HomeScreen>
     if (mounted) {
       setState(() {
         installedApps = apps;
-        filteredApps = apps;
+        if (isSearching && searchController.text.isNotEmpty) {
+          filteredApps = apps
+              .where(
+                (app) => app.name.toLowerCase().contains(
+                  searchController.text.toLowerCase(),
+                ),
+              )
+              .toList();
+        } else {
+          filteredApps = apps;
+        }
         pinnedApps = pinned;
 
         if (_displayPinnedApps.length != pinned.length ||
@@ -268,8 +279,9 @@ class _HomeScreenState extends State<HomeScreen>
         if (didPop) return;
         if (isSearching) {
           searchFocusNode.unfocus();
+          // back navigation
           print(
-            "****************************************************** At line 301",
+            "Back Navigation ****************************************************** At line 271",
           );
         }
       },
@@ -538,8 +550,9 @@ class _HomeScreenState extends State<HomeScreen>
                               onPressed: () async {
                                 if (isSearching) {
                                   searchFocusNode.unfocus();
+                                  // the cancel button
                                   print(
-                                    "***************************************************** At line 569",
+                                    "Cancel Button ***************************************************** At line 541",
                                   );
                                 } else {
                                   final action = await askGlobalAction(context);
@@ -659,8 +672,9 @@ class _HomeScreenState extends State<HomeScreen>
                                   ),
                                   onTap: () async {
                                     searchFocusNode.unfocus();
+                                    print("\n\n\n\n");
                                     print(
-                                      "********************************************8**** At line 687",
+                                      "********************************************8**** At line 662",
                                     );
                                     await InstalledAppsService.startApp(
                                       app.packageName,
