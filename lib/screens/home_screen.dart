@@ -52,6 +52,80 @@ class _HomeScreenState extends State<HomeScreen>
     });
   }
 
+  List<AppInfo> _getSortedApps(List<AppInfo> apps, String query) {
+    if (query.isEmpty) {
+      final sorted = List<AppInfo>.from(apps);
+      sorted.sort(
+        (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
+      );
+      return sorted;
+    }
+    final sorted = List<AppInfo>.from(apps);
+    sorted.sort((a, b) {
+      final scoreA = _getMatchScore(a.name, query);
+      final scoreB = _getMatchScore(b.name, query);
+      if (scoreA != scoreB) {
+        return scoreB.compareTo(scoreA);
+      }
+      return a.name.toLowerCase().compareTo(b.name.toLowerCase());
+    });
+    return sorted;
+  }
+
+  int _getMatchScore(String appName, String query) {
+    final nameLower = appName.toLowerCase();
+    final queryLower = query.toLowerCase();
+
+    // 1. Exact match
+    if (nameLower == queryLower) {
+      return 100;
+    }
+
+    // 2. Starts with query
+    if (nameLower.startsWith(queryLower)) {
+      return 90;
+    }
+
+    // 3. Word starts with query
+    final words = nameLower.split(RegExp(r'[\s\-_]+'));
+    for (final word in words) {
+      if (word.startsWith(queryLower)) {
+        return 80;
+      }
+    }
+
+    // 4. Contains query
+    if (nameLower.contains(queryLower)) {
+      return 70;
+    }
+
+    // 5. Subsequence match (characters in order, like f-i-r in Flipkart)
+    int queryIdx = 0;
+    for (int i = 0; i < nameLower.length; i++) {
+      if (queryIdx < queryLower.length &&
+          nameLower.codeUnitAt(i) == queryLower.codeUnitAt(queryIdx)) {
+        queryIdx++;
+      }
+    }
+    if (queryIdx == queryLower.length) {
+      return 50;
+    }
+
+    // 6. Overlap score (how many characters of query exist in name)
+    int overlapCount = 0;
+    final queryChars = queryLower.split('').toSet();
+    for (final char in queryChars) {
+      if (nameLower.contains(char)) {
+        overlapCount++;
+      }
+    }
+    if (overlapCount > 0) {
+      return (overlapCount * 30 / queryChars.length).round();
+    }
+
+    return 0;
+  }
+
   void _onSearchFocusChange() {
     if (searchFocusNode.hasFocus) {
       if (!isSearching) {
@@ -152,17 +226,10 @@ class _HomeScreenState extends State<HomeScreen>
     if (mounted) {
       setState(() {
         installedApps = apps;
-        if (isSearching && searchController.text.isNotEmpty) {
-          filteredApps = apps
-              .where(
-                (app) => app.name.toLowerCase().contains(
-                  searchController.text.toLowerCase(),
-                ),
-              )
-              .toList();
-        } else {
-          filteredApps = apps;
-        }
+        filteredApps = _getSortedApps(
+          apps,
+          isSearching ? searchController.text : '',
+        );
         pinnedApps = pinned;
 
         if (_displayPinnedApps.length != pinned.length ||
@@ -334,7 +401,7 @@ class _HomeScreenState extends State<HomeScreen>
               ),
 
             // 1.5. Top Status Bar Blur Background
-            if (wallpaper.hasWallpaper(isDark) && !isSearching)
+            if (wallpaper.hasWallpaper(isDark)) // && !isSearching)
               Positioned(
                 top: -5,
                 left: 0,
@@ -522,13 +589,10 @@ class _HomeScreenState extends State<HomeScreen>
                           style: TextStyle(color: theme.textColor),
                           onChanged: (query) {
                             setState(() {
-                              filteredApps = installedApps
-                                  .where(
-                                    (app) => app.name.toLowerCase().contains(
-                                      query.toLowerCase(),
-                                    ),
-                                  )
-                                  .toList();
+                              filteredApps = _getSortedApps(
+                                installedApps,
+                                query,
+                              );
                             });
                           },
                           decoration: InputDecoration(

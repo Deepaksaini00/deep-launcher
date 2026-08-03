@@ -9,6 +9,8 @@ import 'package:android_launcher/services/wallpaper_service.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await initializeDateFormatting();
+  // Disable default focus highlights (auto selection outline line) across the app
+  FocusManager.instance.highlightStrategy = FocusHighlightStrategy.alwaysTouch;
   runApp(
     MultiProvider(
       providers: [
@@ -35,7 +37,7 @@ class MyApp extends StatelessWidget {
             brightness: them.id == 'dark' ? Brightness.dark : Brightness.light,
             scaffoldBackgroundColor: them.background,
             dialogTheme: DialogThemeData(backgroundColor: them.dialogColor),
-
+            focusColor: Colors.transparent,
             textTheme: Theme.of(context).textTheme.apply(
               bodyColor: them.textColor,
               displayColor: them.textColor,
