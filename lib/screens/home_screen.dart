@@ -483,149 +483,168 @@ class _HomeScreenState extends State<HomeScreen>
                 left: 0,
                 right: 0,
                 bottom: 60,
-                child: Row(
-                  children: [
-                    // Left: Time and date display
-                    Expanded(
-                      flex: leftFlex,
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.end,
+                child: IgnorePointer(
+                  ignoring: isSearching,
+                  child: Opacity(
+                    opacity: isSearching ? 0.0 : 1.0,
+                    child: MediaQuery(
+                      data: MediaQuery.of(
+                        context,
+                      ).removeViewInsets(removeBottom: true),
+                      child: Row(
                         children: [
+                          // Left: Time and date display
                           Expanded(
-                            child: Align(
-                              alignment: Alignment.centerLeft,
-                              child: Padding(
-                                padding: const EdgeInsets.only(
-                                  left: 20,
-                                  bottom: 10,
-                                  right: 5,
-                                ),
-                                child: SingleChildScrollView(
-                                  child: Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        hourStr,
-                                        style: TextStyle(
-                                          fontSize: 64,
-                                          fontWeight: FontWeight.bold,
-                                          color: clockColor,
-                                          height: 0.9,
-                                        ),
+                            flex: leftFlex,
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: [
+                                Expanded(
+                                  child: Align(
+                                    alignment: Alignment.centerLeft,
+                                    child: Padding(
+                                      padding: const EdgeInsets.only(
+                                        left: 20,
+                                        bottom: 10,
+                                        right: 5,
                                       ),
-                                      Text(
-                                        minuteStr,
-                                        style: TextStyle(
-                                          fontSize: 64,
-                                          fontWeight: FontWeight.bold,
-                                          color: clockColor,
-                                          height: 0.9,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 18),
-                                      // Date Pill
-                                      ClipRRect(
-                                        borderRadius: BorderRadius.circular(15),
-                                        child: BackdropFilter(
-                                          filter: ImageFilter.blur(
-                                            sigmaX: 4,
-                                            sigmaY: 4,
-                                          ),
-                                          child: Container(
-                                            padding: const EdgeInsets.symmetric(
-                                              horizontal: 10,
-                                              vertical: 5,
+                                      child: SingleChildScrollView(
+                                        child: Column(
+                                          mainAxisSize: MainAxisSize.min,
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              hourStr,
+                                              style: TextStyle(
+                                                fontSize: 64,
+                                                fontWeight: FontWeight.bold,
+                                                color: clockColor,
+                                                height: 0.9,
+                                              ),
                                             ),
-                                            decoration: BoxDecoration(
-                                              color: isDark
-                                                  ? Colors.white.withValues(
-                                                      alpha: 0.15,
-                                                    )
-                                                  : Colors.black.withValues(
-                                                      alpha: 0.08,
-                                                    ),
+                                            Text(
+                                              minuteStr,
+                                              style: TextStyle(
+                                                fontSize: 64,
+                                                fontWeight: FontWeight.bold,
+                                                color: clockColor,
+                                                height: 0.9,
+                                              ),
+                                            ),
+                                            const SizedBox(height: 18),
+                                            // Date Pill
+                                            ClipRRect(
                                               borderRadius:
                                                   BorderRadius.circular(15),
+                                              child: BackdropFilter(
+                                                filter: ImageFilter.blur(
+                                                  sigmaX: 4,
+                                                  sigmaY: 4,
+                                                ),
+                                                child: Container(
+                                                  padding:
+                                                      const EdgeInsets.symmetric(
+                                                        horizontal: 10,
+                                                        vertical: 5,
+                                                      ),
+                                                  decoration: BoxDecoration(
+                                                    color: isDark
+                                                        ? Colors.white
+                                                              .withValues(
+                                                                alpha: 0.15,
+                                                              )
+                                                        : Colors.black
+                                                              .withValues(
+                                                                alpha: 0.08,
+                                                              ),
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                          15,
+                                                        ),
+                                                  ),
+                                                  child: Text(
+                                                    _formatDate(_currentTime),
+                                                    style: TextStyle(
+                                                      fontSize: 12,
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                      color: isDark
+                                                          ? Colors.white
+                                                          : Colors.black,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
                                             ),
-                                            child: Text(
-                                              _formatDate(_currentTime),
+                                            const SizedBox(height: 18),
+                                            // Today's [Weekday]
+                                            Text(
+                                              "Today's\n$weekdayName",
                                               style: TextStyle(
-                                                fontSize: 12,
-                                                fontWeight: FontWeight.bold,
+                                                fontSize: 28,
+                                                fontWeight: FontWeight.w700,
                                                 color: isDark
                                                     ? Colors.white
                                                     : Colors.black,
+                                                height: 1.15,
                                               ),
                                             ),
-                                          ),
+                                          ],
                                         ),
                                       ),
-                                      const SizedBox(height: 18),
-                                      // Today's [Weekday]
-                                      Text(
-                                        "Today's\n$weekdayName",
-                                        style: TextStyle(
-                                          fontSize: 28,
-                                          fontWeight: FontWeight.w700,
-                                          color: isDark
-                                              ? Colors.white
-                                              : Colors.black,
-                                          height: 1.15,
-                                        ),
-                                      ),
-                                    ],
+                                    ),
                                   ),
                                 ),
-                              ),
+                                // Dummy search bar spacing
+                                // SizedBox(height: _searchBarHeight + 16.0),
+                              ],
                             ),
                           ),
-                          // Dummy search bar spacing
-                          // SizedBox(height: _searchBarHeight + 16.0),
-                        ],
-                      ),
-                    ),
-                    // Right: Two-column vertical app layout
-                    Expanded(
-                      flex: rightFlex,
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
+                          // Right: Two-column vertical app layout
                           Expanded(
-                            child: Align(
-                              alignment: Alignment.bottomCenter,
-                              child: Padding(
-                                padding: const EdgeInsets.only(
-                                  right: 15,
-                                  bottom: 20,
-                                  left: 10,
-                                ),
-                                child: GridView.builder(
-                                  shrinkWrap: true,
-                                  physics: const NeverScrollableScrollPhysics(),
-                                  gridDelegate:
-                                      SliverGridDelegateWithFixedCrossAxisCount(
-                                        crossAxisCount: gridColumns,
-                                        crossAxisSpacing: 10,
-                                        mainAxisSpacing: 12,
-                                        childAspectRatio: 1.0,
+                            flex: rightFlex,
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: [
+                                Expanded(
+                                  child: Align(
+                                    alignment: Alignment.bottomCenter,
+                                    child: Padding(
+                                      padding: const EdgeInsets.only(
+                                        right: 15,
+                                        bottom: 20,
+                                        left: 10,
                                       ),
-                                  itemCount: visiblePinnedApps.length,
-                                  itemBuilder: (context, index) {
-                                    final app = visiblePinnedApps[index];
-                                    return buildTile(app);
-                                  },
+                                      child: GridView.builder(
+                                        shrinkWrap: true,
+                                        physics:
+                                            const NeverScrollableScrollPhysics(),
+                                        gridDelegate:
+                                            SliverGridDelegateWithFixedCrossAxisCount(
+                                              crossAxisCount: gridColumns,
+                                              crossAxisSpacing: 10,
+                                              mainAxisSpacing: 12,
+                                              childAspectRatio: 1.0,
+                                            ),
+                                        itemCount: visiblePinnedApps.length,
+                                        itemBuilder: (context, index) {
+                                          final app = visiblePinnedApps[index];
+                                          return buildTile(app);
+                                        },
+                                      ),
+                                    ),
+                                  ),
                                 ),
-                              ),
+                                // Dummy search bar spacing
+                                // SizedBox(height: _searchBarHeight + 16.0),
+                              ],
                             ),
                           ),
-                          // Dummy search bar spacing
-                          // SizedBox(height: _searchBarHeight + 16.0),
                         ],
                       ),
                     ),
-                  ],
+                  ),
                 ),
               ),
 
