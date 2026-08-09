@@ -27,9 +27,9 @@ class AppDialogs {
             mainAxisSize: MainAxisSize.min,
             children: [
               ListTile(
-                leading: const Icon(Icons.app_settings_alt_outlined),
+                leading: const Icon(Icons.info_outline),
                 title: Text(
-                  "Open App Setting",
+                  "App Info",
                   style: TextStyle(
                     color: Theme.of(context).textTheme.bodyMedium?.color,
                   ),
@@ -40,11 +40,24 @@ class AppDialogs {
                 },
               ),
               ListTile(
-                leading: Icon(
-                  app.isSystemApp ? Icons.info_outline : Icons.delete_forever,
-                ),
+                leading: const Icon(Icons.add_to_home_screen),
                 title: Text(
-                  app.isSystemApp ? "App Info" : "Delete App",
+                  "Add to Home",
+                  style: TextStyle(
+                    color: Theme.of(context).textTheme.bodyMedium?.color,
+                  ),
+                ),
+                onTap: () async {
+                  final navigator = Navigator.of(context);
+                  await InstalledAppsService.addToPinned(app);
+                  navigator.pop();
+                  refresh();
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.delete_forever),
+                title: Text(
+                  "Uninstall App",
                   style: TextStyle(
                     color: Theme.of(context).textTheme.bodyMedium?.color,
                   ),

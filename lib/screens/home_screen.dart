@@ -46,8 +46,6 @@ class _HomeScreenState extends State<HomeScreen>
   DateTime _currentTime = DateTime.now();
   final GlobalKey _searchBarKey = GlobalKey();
   double _searchBarHeight = 56;
-  bool _pendingSearchExit = false;
-  Timer? _searchExitTimer;
 
   void removeFromPinnedCache(String packageName) {
     setState(() {
@@ -144,8 +142,6 @@ class _HomeScreenState extends State<HomeScreen>
 
   void _onSearchFocusChange() {
     if (searchFocusNode.hasFocus) {
-      _pendingSearchExit = false;
-      _searchExitTimer?.cancel();
       if (!isSearching) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (mounted) {
@@ -169,27 +165,12 @@ class _HomeScreenState extends State<HomeScreen>
     }
   }
 
-  // Leaving the search screen while the keyboard is still animating closed can
-  // briefly distort the home grid. Instead, wait until the keyboard has fully
-  // closed before revealing the home screen.
   void _requestSearchExit() {
-    final insets = MediaQuery.of(context).viewInsets.bottom;
-    if (insets > 0) {
-      _pendingSearchExit = true;
-      _searchExitTimer?.cancel();
-      _searchExitTimer = Timer(
-        const Duration(milliseconds: 500),
-        _finishSearchExit,
-      );
-    } else {
-      _finishSearchExit();
-    }
+    _finishSearchExit();
   }
 
   void _finishSearchExit() {
     if (!mounted) return;
-    _pendingSearchExit = false;
-    _searchExitTimer?.cancel();
     setState(() {
       isSearching = false;
       searchController.clear();
@@ -202,16 +183,6 @@ class _HomeScreenState extends State<HomeScreen>
   void _exitSearchImmediately() {
     _finishSearchExit();
     searchFocusNode.unfocus();
-  }
-
-  @override
-  void didChangeMetrics() {
-    super.didChangeMetrics();
-    if (_pendingSearchExit &&
-        mounted &&
-        MediaQuery.of(context).viewInsets.bottom <= 0) {
-      _finishSearchExit();
-    }
   }
 
   @override
@@ -231,12 +202,21 @@ class _HomeScreenState extends State<HomeScreen>
     });
   }
 
+  double _topPadding = 0.0;
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_topPadding == 0.0) {
+      _topPadding = MediaQuery.of(context).padding.top;
+    }
+  }
+
   void _loadSettings() async {
     final prefs = await SharedPreferences.getInstance();
     if (mounted) {
       setState(() {
         gridColumns = prefs.getInt('home_grid_columns') ?? 2;
-        gridRows = prefs.getInt('home_grid_rows') ?? 6;
+        gridRows = (prefs.getInt('home_grid_rows') ?? 6).clamp(1, 7);
       });
     }
   }
@@ -244,7 +224,6 @@ class _HomeScreenState extends State<HomeScreen>
   @override
   void dispose() {
     _timer?.cancel();
-    _searchExitTimer?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     searchFocusNode.removeListener(_onSearchFocusChange);
     searchController.dispose();
@@ -355,8 +334,9 @@ class _HomeScreenState extends State<HomeScreen>
     // flush against the keyboard; otherwise the search bar keeps the same
     // bottom margin as on the home screen.
     final double keyboardInset = MediaQuery.of(context).viewInsets.bottom;
-    final double searchBarBottomGap =
-        (isSearching && keyboardInset > 0) ? 0.0 : 16.0;
+    final double searchBarBottomGap = (isSearching && keyboardInset > 0)
+        ? 0.0
+        : 16.0;
 
     SystemChrome.setSystemUIOverlayStyle(
       SystemUiOverlayStyle(
@@ -497,132 +477,157 @@ class _HomeScreenState extends State<HomeScreen>
             // 2. Home Screen Content (Clock + Pinned Apps) - shown only on the
             //    home screen; fully replaced by the app-list screen while
             //    searching so the grid/time never appear in the background.
-            if (!isSearching) Positioned(
-              top: MediaQuery.of(context).padding.top + 8,
-              left: 0,
-              right: 0,
-              bottom: 72,
-              child: Row(
-                children: [
-                  // Left: Time and date display
-                  Expanded(
-                    flex: leftFlex,
-                    child: Align(
-                      alignment: Alignment.centerLeft,
-                      child: Padding(
-                        padding: EdgeInsets.only(
-                          left: 20,
-                          bottom: 10,
-                          right: 5,
-                        ),
-                        child: SingleChildScrollView(
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                hourStr,
-                                style: TextStyle(
-                                  fontSize: 64,
-                                  fontWeight: FontWeight.bold,
-                                  color: clockColor,
-                                  height: 0.9,
+            if (!isSearching)
+              Positioned(
+                top: MediaQuery.paddingOf(context).top + 8,
+                left: 0,
+                right: 0,
+                bottom: 60,
+                child: Row(
+                  children: [
+                    // Left: Time and date display
+                    Expanded(
+                      flex: leftFlex,
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          Expanded(
+                            child: Align(
+                              alignment: Alignment.centerLeft,
+                              child: Padding(
+                                padding: const EdgeInsets.only(
+                                  left: 20,
+                                  bottom: 10,
+                                  right: 5,
                                 ),
-                              ),
-                              Text(
-                                minuteStr,
-                                style: TextStyle(
-                                  fontSize: 64,
-                                  fontWeight: FontWeight.bold,
-                                  color: clockColor,
-                                  height: 0.9,
-                                ),
-                              ),
-                              const SizedBox(height: 18),
-                              // Date Pill
-                              ClipRRect(
-                                borderRadius: BorderRadius.circular(15),
-                                child: BackdropFilter(
-                                  filter: ImageFilter.blur(
-                                    sigmaX: 4,
-                                    sigmaY: 4,
-                                  ),
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 10,
-                                      vertical: 5,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: isDark
-                                          ? Colors.white.withValues(alpha: 0.15)
-                                          : Colors.black.withValues(
-                                              alpha: 0.08,
-                                            ),
-                                      borderRadius: BorderRadius.circular(15),
-                                    ),
-                                    child: Text(
-                                      _formatDate(_currentTime),
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.bold,
-                                        color: isDark
-                                            ? Colors.white
-                                            : Colors.black,
+                                child: SingleChildScrollView(
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        hourStr,
+                                        style: TextStyle(
+                                          fontSize: 64,
+                                          fontWeight: FontWeight.bold,
+                                          color: clockColor,
+                                          height: 0.9,
+                                        ),
                                       ),
-                                    ),
+                                      Text(
+                                        minuteStr,
+                                        style: TextStyle(
+                                          fontSize: 64,
+                                          fontWeight: FontWeight.bold,
+                                          color: clockColor,
+                                          height: 0.9,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 18),
+                                      // Date Pill
+                                      ClipRRect(
+                                        borderRadius: BorderRadius.circular(15),
+                                        child: BackdropFilter(
+                                          filter: ImageFilter.blur(
+                                            sigmaX: 4,
+                                            sigmaY: 4,
+                                          ),
+                                          child: Container(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 10,
+                                              vertical: 5,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              color: isDark
+                                                  ? Colors.white.withValues(
+                                                      alpha: 0.15,
+                                                    )
+                                                  : Colors.black.withValues(
+                                                      alpha: 0.08,
+                                                    ),
+                                              borderRadius:
+                                                  BorderRadius.circular(15),
+                                            ),
+                                            child: Text(
+                                              _formatDate(_currentTime),
+                                              style: TextStyle(
+                                                fontSize: 12,
+                                                fontWeight: FontWeight.bold,
+                                                color: isDark
+                                                    ? Colors.white
+                                                    : Colors.black,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(height: 18),
+                                      // Today's [Weekday]
+                                      Text(
+                                        "Today's\n$weekdayName",
+                                        style: TextStyle(
+                                          fontSize: 28,
+                                          fontWeight: FontWeight.w700,
+                                          color: isDark
+                                              ? Colors.white
+                                              : Colors.black,
+                                          height: 1.15,
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
                               ),
-                              const SizedBox(height: 18),
-                              // Today's [Weekday]
-                              Text(
-                                "Today's\n$weekdayName",
-                                style: TextStyle(
-                                  fontSize: 28,
-                                  fontWeight: FontWeight.w700,
-                                  color: isDark ? Colors.white : Colors.black,
-                                  height: 1.15,
+                            ),
+                          ),
+                          // Dummy search bar spacing
+                          // SizedBox(height: _searchBarHeight + 16.0),
+                        ],
+                      ),
+                    ),
+                    // Right: Two-column vertical app layout
+                    Expanded(
+                      flex: rightFlex,
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          Expanded(
+                            child: Align(
+                              alignment: Alignment.bottomCenter,
+                              child: Padding(
+                                padding: const EdgeInsets.only(
+                                  right: 15,
+                                  bottom: 20,
+                                  left: 10,
+                                ),
+                                child: GridView.builder(
+                                  shrinkWrap: true,
+                                  physics: const NeverScrollableScrollPhysics(),
+                                  gridDelegate:
+                                      SliverGridDelegateWithFixedCrossAxisCount(
+                                        crossAxisCount: gridColumns,
+                                        crossAxisSpacing: 10,
+                                        mainAxisSpacing: 12,
+                                        childAspectRatio: 1.0,
+                                      ),
+                                  itemCount: visiblePinnedApps.length,
+                                  itemBuilder: (context, index) {
+                                    final app = visiblePinnedApps[index];
+                                    return buildTile(app);
+                                  },
                                 ),
                               ),
-                            ],
+                            ),
                           ),
-                        ),
+                          // Dummy search bar spacing
+                          // SizedBox(height: _searchBarHeight + 16.0),
+                        ],
                       ),
                     ),
-                  ),
-                  // Right: Two-column vertical app layout
-                  Expanded(
-                    flex: rightFlex,
-                    child: Align(
-                      alignment: Alignment.bottomCenter,
-                      child: Padding(
-                        padding: EdgeInsets.only(
-                          right: 15,
-                          bottom: 20,
-                          left: 10,
-                        ),
-                        child: GridView.builder(
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          gridDelegate:
-                              SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount: gridColumns,
-                                crossAxisSpacing: 10,
-                                mainAxisSpacing: 12,
-                                childAspectRatio: 1.0,
-                              ),
-                          itemCount: visiblePinnedApps.length,
-                          itemBuilder: (context, index) {
-                            final app = visiblePinnedApps[index];
-                            return buildTile(app);
-                          },
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
 
             // 3a. Full-screen Blur Background (visible when searching): the blur
             //     layer covers the whole screen, including the area behind and
@@ -670,9 +675,7 @@ class _HomeScreenState extends State<HomeScreen>
                         color: Colors.white.withValues(alpha: 0.25),
                         border: Border(
                           bottom: BorderSide(
-                            color: theme.textColor.withValues(
-                              alpha: 0.15,
-                            ),
+                            color: theme.textColor.withValues(alpha: 0.15),
                             width: 1.5,
                           ),
                         ),
@@ -709,11 +712,7 @@ class _HomeScreenState extends State<HomeScreen>
                               );
                             },
                             onLongPress: () {
-                              AppDialogs.appDialogBox(
-                                context,
-                                app,
-                                _loadApps,
-                              );
+                              AppDialogs.appDialogBox(context, app, _loadApps);
                             },
                           );
                         },
@@ -728,13 +727,13 @@ class _HomeScreenState extends State<HomeScreen>
             Positioned(
               left: 0,
               right: 0,
-              bottom: isSearching ? keyboardInset : 0,
+              bottom: keyboardInset,
               child: Padding(
                 key: const ValueKey('searchBar'),
                 padding: EdgeInsets.fromLTRB(
-                  16.0,
+                  10.0,
                   0.0,
-                  16.0,
+                  10.0,
                   searchBarBottomGap,
                 ),
                 child: ClipRRect(
@@ -749,8 +748,8 @@ class _HomeScreenState extends State<HomeScreen>
                       decoration: BoxDecoration(
                         color: isSearching
                             ? (isDark
-                                  ? Colors.black.withValues(alpha: 0.35)
-                                  : Colors.grey.withValues(alpha: 0.65))
+                                  ? Colors.black.withValues(alpha: 0.20)
+                                  : Colors.grey.withValues(alpha: 0.35))
                             : Colors.white.withValues(alpha: 0.35),
                         borderRadius: isSearching
                             ? BorderRadius.zero
@@ -773,15 +772,10 @@ class _HomeScreenState extends State<HomeScreen>
                         },
                         decoration: InputDecoration(
                           border: InputBorder.none,
-                          contentPadding: isSearching
-                              ? const EdgeInsets.symmetric(
-                                  horizontal: 24,
-                                  vertical: 16,
-                                )
-                              : const EdgeInsets.symmetric(
-                                  horizontal: 20,
-                                  vertical: 12,
-                                ),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 12,
+                          ),
                           hintText: 'Search Apps ${installedApps.length}',
                           hintStyle: TextStyle(
                             color: theme.textColor.withValues(alpha: 0.6),
@@ -1074,7 +1068,7 @@ class _HomeScreenState extends State<HomeScreen>
                         dropdownColor: theme.dialogColor,
                         style: TextStyle(color: theme.textColor),
                         items: List.generate(
-                          9,
+                          7,
                           (index) => DropdownMenuItem(
                             value: index + 1,
                             child: Text(
