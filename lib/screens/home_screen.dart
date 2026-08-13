@@ -391,9 +391,6 @@ class _HomeScreenState extends State<HomeScreen>
         if (isSearching) {
           searchFocusNode.unfocus();
           // back navigation
-          print(
-            "Back Navigation ****************************************************** At line 271",
-          );
         }
       },
       child: Scaffold(
@@ -482,7 +479,7 @@ class _HomeScreenState extends State<HomeScreen>
                 top: MediaQuery.paddingOf(context).top + 8,
                 left: 0,
                 right: 0,
-                bottom: 60,
+                bottom: _searchBarHeight + 30,
                 child: IgnorePointer(
                   ignoring: isSearching,
                   child: Opacity(
@@ -601,6 +598,7 @@ class _HomeScreenState extends State<HomeScreen>
                               ],
                             ),
                           ),
+
                           // Right: Two-column vertical app layout
                           Expanded(
                             flex: rightFlex,
@@ -609,35 +607,39 @@ class _HomeScreenState extends State<HomeScreen>
                               children: [
                                 Expanded(
                                   child: Align(
-                                    alignment: Alignment.bottomCenter,
+                                    // alignment: Alignment.bottomCenter,
                                     child: Padding(
                                       padding: const EdgeInsets.only(
-                                        right: 15,
-                                        bottom: 20,
-                                        left: 10,
+                                        right: 10,
+                                        bottom: 10,
+                                        left: 0,
                                       ),
-                                      child: GridView.builder(
-                                        shrinkWrap: true,
-                                        physics:
-                                            const NeverScrollableScrollPhysics(),
-                                        gridDelegate:
-                                            SliverGridDelegateWithFixedCrossAxisCount(
-                                              crossAxisCount: gridColumns,
-                                              crossAxisSpacing: 10,
-                                              mainAxisSpacing: 12,
-                                              childAspectRatio: 1.0,
-                                            ),
-                                        itemCount: visiblePinnedApps.length,
-                                        itemBuilder: (context, index) {
-                                          final app = visiblePinnedApps[index];
-                                          return buildTile(app);
-                                        },
+                                      child: Align(
+                                        alignment: Alignment.bottomCenter,
+                                        child: GridView.builder(
+                                          // GridView.builder creates default padding for elements
+                                          padding: EdgeInsets.zero,
+                                          shrinkWrap: true,
+                                          physics:
+                                              const NeverScrollableScrollPhysics(),
+                                          gridDelegate:
+                                              SliverGridDelegateWithFixedCrossAxisCount(
+                                                crossAxisCount: gridColumns,
+                                                crossAxisSpacing: 10,
+                                                mainAxisSpacing: 12,
+                                                childAspectRatio: 1.0,
+                                              ),
+                                          itemCount: visiblePinnedApps.length,
+                                          itemBuilder: (context, index) {
+                                            final app =
+                                                visiblePinnedApps[index];
+                                            return buildTile(app);
+                                          },
+                                        ),
                                       ),
                                     ),
                                   ),
                                 ),
-                                // Dummy search bar spacing
-                                // SizedBox(height: _searchBarHeight + 16.0),
                               ],
                             ),
                           ),
@@ -722,10 +724,6 @@ class _HomeScreenState extends State<HomeScreen>
                             ),
                             onTap: () async {
                               searchFocusNode.unfocus();
-                              print("\n\n\n\n");
-                              print(
-                                "********************************************8**** At line 662",
-                              );
                               await InstalledAppsService.startApp(
                                 app.packageName,
                               );
@@ -808,10 +806,6 @@ class _HomeScreenState extends State<HomeScreen>
                             onPressed: () async {
                               if (isSearching) {
                                 _exitSearchImmediately();
-                                // the cancel button
-                                print(
-                                  "Cancel Button ***************************************************** At line 541",
-                                );
                               } else {
                                 final action = await askGlobalAction(context);
                                 if (action == null) return;
