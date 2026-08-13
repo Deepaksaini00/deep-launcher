@@ -1,5 +1,5 @@
-import 'package:android_launcher/icons/app_icons.dart';
 import 'package:android_launcher/services/installed_apps.dart';
+import 'package:android_launcher/widgets/icon_picker_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:installed_apps/app_info.dart';
 import 'package:installed_apps/installed_apps.dart';
@@ -158,116 +158,14 @@ class AppDialogs {
     BuildContext context,
     AppInfo app,
     VoidCallback refresh,
-  ) {
-    TextEditingController searchIconCtrl = TextEditingController();
-    List<MapEntry<String, IconData>> filteredIcons = icons.entries.toList();
-    void updateSearch(String query) {
-      filteredIcons = icons.entries
-          .where((e) => e.key.toLowerCase().contains(query.toLowerCase()))
-          .toList();
+  ) async {
+    final picked = await showIconPicker(context);
+    if (picked == null || !context.mounted) return;
+    if (picked == kUseOriginalIcon) {
+      await InstalledAppsService.removeSavedIcon(app.packageName);
+    } else {
+      await InstalledAppsService.saveIcons(app.packageName, picked);
     }
-
-    showDialog(
-      context: context,
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setState) {
-            return Dialog(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: SingleChildScrollView(
-                child: Container(
-                  width: 300,
-                  padding: const EdgeInsets.all(15),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      // TITLE
-                      const Text(
-                        "Pick an icon",
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 18,
-                        ),
-                      ),
-
-                      const SizedBox(height: 15),
-
-                      // SEARCH BOX
-                      TextField(
-                        controller: searchIconCtrl,
-                        onChanged: (value) {
-                          setState(() => updateSearch(value));
-                        },
-                        decoration: InputDecoration(
-                          prefixIcon: const Icon(Icons.search),
-                          hintText: "Search",
-                          filled: true,
-                          fillColor: const Color.fromARGB(255, 212, 211, 211),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide.none,
-                          ),
-                        ),
-                      ),
-
-                      const SizedBox(height: 15),
-
-                      // ICON GRID
-                      SizedBox(
-                        height: 260,
-                        child: GridView.builder(
-                          padding: const EdgeInsets.all(8),
-                          itemCount: filteredIcons.length,
-                          gridDelegate:
-                              const SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount: 5,
-                                crossAxisSpacing: 10,
-                                mainAxisSpacing: 10,
-                              ),
-                          itemBuilder: (context, index) {
-                            final entry = filteredIcons[index];
-
-                            return GestureDetector(
-                              onTap: () {
-                                InstalledAppsService.saveIcons(
-                                  app.packageName,
-                                  entry.key,
-                                );
-                                Navigator.pop(context);
-                                refresh();
-                              },
-                              child: Icon(
-                                entry.value,
-                                size: 30,
-                                // color: const Color.fromARGB(221, 0, 0, 0),
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-
-                      const SizedBox(height: 10),
-
-                      // CLOSE BUTTON
-                      TextButton(
-                        child: const Text(
-                          "Close",
-                          style: TextStyle(
-                            color: Color.fromARGB(255, 181, 18, 0),
-                          ),
-                        ),
-                        onPressed: () => Navigator.pop(context),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            );
-          },
-        );
-      },
-    );
+    refresh();
   }
 }

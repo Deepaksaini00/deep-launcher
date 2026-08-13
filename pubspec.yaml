@@ -69,6 +69,23 @@ flutter:
 
   assets:
     - assets/
+
+  fonts:
+    - family: LineAwesomeIcons
+      fonts:
+        - asset: assets/fonts/LineAwesome.ttf
+    - family: FontAwesomeBrands
+      fonts:
+        - asset: assets/fonts/Font-Awesome-7-Brands-Regular-400.otf
+          weight: 400
+    - family: FontAwesomeRegular
+      fonts:
+        - asset: assets/fonts/Font-Awesome-7-Free-Regular-400.otf
+          weight: 400
+    - family: FontAwesomeSolid
+      fonts:
+        - asset: assets/fonts/Font-Awesome-7-Free-Solid-900.otf
+          weight: 900
   # To add assets to your application, add an assets section, like this:
   # assets:
   #   - images/a_dot_burr.jpeg

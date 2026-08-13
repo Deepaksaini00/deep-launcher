@@ -9,6 +9,7 @@ import 'package:android_launcher/services/installed_apps.dart';
 import 'package:android_launcher/services/theme_service.dart';
 import 'package:android_launcher/services/wallpaper_service.dart';
 import 'package:android_launcher/util/file_picker.dart';
+import 'package:android_launcher/widgets/app_system_icon.dart';
 import 'package:android_launcher/widgets/dialog_box.dart';
 import 'package:android_launcher/widgets/theme_picker.dart';
 import 'package:android_launcher/widgets/wallpaper_editor.dart';
@@ -286,11 +287,25 @@ class _HomeScreenState extends State<HomeScreen>
 
   Widget buildTile(AppInfo app) {
     String? iconKey = InstalledAppsService.getSavedIconSync(app.packageName);
-    IconData iconToShow = icons[iconKey] ?? defaultIcon;
+    IconData? customIcon = iconKey == null ? null : icons[iconKey];
+    final bool useAppIcon = customIcon == null;
 
     final iconBgColor = Colors.white.withValues(alpha: 0.65);
     final double tileBgSize = gridColumns == 3 ? 65 : 74;
     final double iconSize = gridColumns == 3 ? 30 : 34;
+
+    Widget iconWidget;
+    if (useAppIcon) {
+      iconWidget = AppSystemIcon(
+        packageName: app.packageName,
+        size: iconSize,
+        fallback: defaultIcon,
+        iconColor: Colors.black87,
+        grayscale: true,
+      );
+    } else {
+      iconWidget = Icon(customIcon, size: iconSize, color: Colors.black87);
+    }
 
     return InkWell(
       borderRadius: BorderRadius.circular(20),
@@ -308,9 +323,7 @@ class _HomeScreenState extends State<HomeScreen>
           width: tileBgSize,
           height: tileBgSize,
           decoration: BoxDecoration(color: iconBgColor, shape: BoxShape.circle),
-          child: Center(
-            child: Icon(iconToShow, size: iconSize, color: Colors.black87),
-          ),
+          child: Center(child: iconWidget),
         ),
       ),
     );

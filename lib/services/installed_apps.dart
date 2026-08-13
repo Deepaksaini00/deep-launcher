@@ -261,6 +261,27 @@ class InstalledAppsService {
     }
   }
 
+  // ✅ Reset to the app's original icon
+  static Future<void> removeSavedIcon(String packageName) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(packageName);
+    _cachedIcons[packageName] = null;
+    List<String> pinnedApps = prefs.getStringList(_pinnedKey) ?? [];
+    for (int i = 0; i < pinnedApps.length; i++) {
+      try {
+        final map = jsonDecode(pinnedApps[i]) as Map<String, dynamic>;
+        if (map['packageName'] == packageName) {
+          map['iconSlug'] = null;
+          pinnedApps[i] = jsonEncode(map);
+          break;
+        }
+      } catch (e) {
+        // ignore invalid entries
+      }
+    }
+    await prefs.setStringList(_pinnedKey, pinnedApps);
+  }
+
   // Load icons
   static Future<String?> getSavedIcon(String packageName) async {
     if (_cachedIcons.containsKey(packageName)) {

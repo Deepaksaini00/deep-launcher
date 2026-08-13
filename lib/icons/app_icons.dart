@@ -1,6 +1,12 @@
 import 'package:flutter/material.dart';
 
-const icons = {
+import 'icon_choice.dart';
+import 'packs/cupertino.dart';
+import 'packs/font_awesome.dart';
+import 'packs/line_awesome.dart';
+import 'packs/material.dart';
+
+const Map<String, IconData> _customIcons = {
   // ==== App / Utility Icons ====
   'flashlight': Icons.flashlight_on_outlined,
   'file': Icons.insert_drive_file_outlined,
@@ -76,6 +82,84 @@ const icons = {
   'schedule': Icons.schedule_outlined,
   'folder_copy': Icons.folder_copy,
 };
+
+/// Every icon the launcher offers, keyed by a stable string slug. This merges
+/// the original hand-picked icons with the full Material, Cupertino,
+/// Font Awesome and Line Awesome packs.
+final Map<String, IconData> icons = <String, IconData>{
+  for (final e in allIcons.entries) e.key: e.value.data,
+  for (final e in cupertinoIcons.entries) e.key: e.value.data,
+  for (final e in fontAwesomeIcons.entries) e.key: e.value.data,
+  for (final e in lineAwesomeIcons.entries) e.key: e.value.data,
+  ..._customIcons,
+};
+
+/// All icon choices (pack + name + data) for the picker.
+final List<IconChoice> searchableIcons = <IconChoice>[
+  ...allIcons.values,
+  ...cupertinoIcons.values,
+  ...fontAwesomeIcons.values,
+  ...lineAwesomeIcons.values,
+];
+
+final List<IconChoice> allIconChoices = <IconChoice>[
+  ..._customIcons.entries.map(
+    (e) => IconChoice(name: e.key, data: e.value, pack: 'custom'),
+  ),
+  ...searchableIcons,
+];
+
+/// A small curated set of commonly used icons shown by default in the picker,
+/// so the dialog isn't overloaded with thousands of entries.
+final List<String> preferredIconKeys = <String>[
+  'gallery',
+  'message',
+  'chat',
+  'mail',
+  'call',
+  'camera',
+  'photo_camera',
+  'video',
+  'music',
+  'music_note_outlined',
+  'game',
+  'mic',
+  'wallet',
+  'shopping_cart',
+  'payments',
+  'payment',
+  'credit_card',
+  'map',
+  'place',
+  'location_on',
+  'directions',
+  'web',
+  'search',
+  'language',
+  'settings',
+  'lock',
+  'alarm',
+  'timer',
+  'calculator',
+  'bookmark',
+  'edit',
+  'note',
+  'description',
+  'folder',
+  'folder_open',
+  'file',
+  'download',
+  'upload',
+  'cloud',
+  'notifications',
+  'headphones',
+  'headset',
+  'phone',
+  'home',
+  'star',
+  'favorite',
+  'apps',
+];
 
 String? iconDataToName(IconData icon) {
   for (final (entry) in icons.entries) {
