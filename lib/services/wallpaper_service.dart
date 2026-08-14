@@ -123,18 +123,33 @@ class WallpaperService extends ChangeNotifier {
       try {
         final appDir = await getApplicationDocumentsDirectory();
         final suffix = isDark ? 'dark' : 'light';
-        final extension = path.split('.').last;
-        final savedFile = File('${appDir.path}/wallpaper_$suffix.$extension');
-        
-        // Remove existing file if any to avoid errors/collisions
-        if (savedFile.existsSync()) {
-          try {
-            savedFile.deleteSync();
-          } catch (_) {}
-        }
-        
+        final extension = path.contains('.') ? path.split('.').last : 'jpg';
+
+        // Use a unique filename per selection. Flutter's image cache is keyed
+        // by file path, so reusing a fixed path (e.g. wallpaper_light.jpg)
+        // would keep showing the previously-cached image even after the file
+        // is overwritten. A unique path forces a fresh decode every time.
+        final savedFile = File(
+          '${appDir.path}/wallpaper_${suffix}_${DateTime.now().millisecondsSinceEpoch}.$extension',
+        );
         await File(path).copy(savedFile.path);
         finalPath = savedFile.path;
+
+        // Clean up any previously saved wallpapers for this brightness so the
+        // documents directory does not accumulate old images.
+        final dir = Directory(appDir.path);
+        if (dir.existsSync()) {
+          for (final f in dir.listSync().whereType<File>()) {
+            final name = f.uri.pathSegments.last;
+            if (name.startsWith('wallpaper_$suffix') &&
+                f.path != savedFile.path &&
+                f.existsSync()) {
+              try {
+                await f.delete();
+              } catch (_) {}
+            }
+          }
+        }
       } catch (e) {
         debugPrint("Error copying wallpaper: $e");
       }

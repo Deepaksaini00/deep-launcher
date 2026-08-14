@@ -16,10 +16,8 @@ Future<String?> showIconPicker(
 }) {
   return showDialog<String>(
     context: context,
-    builder: (_) => _IconPickerDialog(
-      selectedKey: selectedKey,
-      defaultCount: defaultCount,
-    ),
+    builder: (_) =>
+        _IconPickerDialog(selectedKey: selectedKey, defaultCount: defaultCount),
   );
 }
 
@@ -103,7 +101,7 @@ class _IconPickerDialogState extends State<_IconPickerDialog> {
                 ),
               ],
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 2),
             TextField(
               controller: _searchController,
               autofocus: false,
@@ -112,8 +110,9 @@ class _IconPickerDialogState extends State<_IconPickerDialog> {
               decoration: InputDecoration(
                 prefixIcon: Icon(Icons.search, color: theme.iconColor),
                 hintText: "Search icons",
-                hintStyle:
-                    TextStyle(color: theme.textColor.withValues(alpha: 0.5)),
+                hintStyle: TextStyle(
+                  color: theme.textColor.withValues(alpha: 0.5),
+                ),
                 suffixIcon: _query.isEmpty
                     ? null
                     : IconButton(
@@ -125,8 +124,9 @@ class _IconPickerDialogState extends State<_IconPickerDialog> {
                       ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide:
-                      BorderSide(color: theme.textColor.withValues(alpha: 0.2)),
+                  borderSide: BorderSide(
+                    color: theme.textColor.withValues(alpha: 0.2),
+                  ),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
@@ -134,7 +134,7 @@ class _IconPickerDialogState extends State<_IconPickerDialog> {
                 ),
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 5),
             Align(
               alignment: Alignment.centerLeft,
               child: Text(
@@ -149,7 +149,7 @@ class _IconPickerDialogState extends State<_IconPickerDialog> {
             ),
             const SizedBox(height: 8),
             SizedBox(
-              height: 300,
+              height: 220,
               child: GridView.builder(
                 padding: const EdgeInsets.all(4),
                 itemCount: visible.length,
