@@ -471,7 +471,7 @@ class _HomeScreenState extends State<HomeScreen>
                     filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
                     child: Container(
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.80),
+                        color: Colors.grey.withValues(alpha: 0.80),
                         border: Border(
                           bottom: BorderSide(
                             color: theme.textColor.withValues(alpha: 0.40),
@@ -606,8 +606,6 @@ class _HomeScreenState extends State<HomeScreen>
                                     ),
                                   ),
                                 ),
-                                // Dummy search bar spacing
-                                // SizedBox(height: _searchBarHeight + 16.0),
                               ],
                             ),
                           ),

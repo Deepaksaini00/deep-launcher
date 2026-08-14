@@ -100,6 +100,21 @@ class AppDialogs {
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
+              leading: const Icon(Icons.image),
+              title: Text(
+                "Pick Icon",
+                style: TextStyle(
+                  color: Theme.of(context).textTheme.bodyMedium?.color,
+                ),
+              ),
+              onTap: () async {
+                await AppDialogs.iconDialogBox(context, app, refresh);
+                if (context.mounted) {
+                  Navigator.pop(context);
+                }
+              },
+            ),
+            ListTile(
               leading: const Icon(Icons.delete),
               title: Text(
                 "Remove From Home",
@@ -115,24 +130,11 @@ class AppDialogs {
               },
             ),
             ListTile(
-              leading: const Icon(Icons.image),
-              title: Text(
-                "Select Icon",
-                style: TextStyle(
-                  color: Theme.of(context).textTheme.bodyMedium?.color,
-                ),
-              ),
-              onTap: () async {
-                Navigator.pop(context);
-                AppDialogs.iconDialogBox(context, app, refresh);
-              },
-            ),
-            ListTile(
               leading: Icon(
                 app.isSystemApp ? Icons.info_outline : Icons.delete_forever,
               ),
               title: Text(
-                app.isSystemApp ? "App Info" : "Delete App",
+                app.isSystemApp ? "App Info" : "Uninstall App",
                 style: TextStyle(
                   color: Theme.of(context).textTheme.bodyMedium?.color,
                 ),
@@ -154,13 +156,13 @@ class AppDialogs {
   }
 
   // 3️⃣ Icon Picker Dialog
-  static void iconDialogBox(
+  static Future<void> iconDialogBox(
     BuildContext context,
     AppInfo app,
     VoidCallback refresh,
   ) async {
     final picked = await showIconPicker(context);
-    if (picked == null || !context.mounted) return;
+    if (picked == null) return;
     if (picked == kUseOriginalIcon) {
       await InstalledAppsService.removeSavedIcon(app.packageName);
     } else {
