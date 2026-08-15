@@ -847,12 +847,37 @@ class _HomeScreenState extends State<HomeScreen>
                                     _loadApps(forceRefresh: true);
                                     break;
                                   case GlobalAction.exportGridJson:
-                                    final String? json =
-                                        await InstalledAppsService.exportPinnedApps();
-                                    if (json != null) {
-                                      await GridAppPicker.saveFileToLocalStorage(
+                                    try {
+                                      final String? json =
+                                          await InstalledAppsService
+                                              .exportPinnedApps();
+                                      if (json == null) {
+                                        if (context.mounted) {
+                                          _showFeedback(
+                                            context,
+                                            "No pinned apps to export",
+                                          );
+                                        }
+                                        break;
+                                      }
+                                      final String? path =
+                                          await GridAppPicker.saveJsonFile(
                                         json,
                                       );
+                                      if (path != null && context.mounted) {
+                                        _showFeedback(
+                                          context,
+                                          "Grid exported to\n$path",
+                                        );
+                                      }
+                                    } catch (e) {
+                                      debugPrint('❌ Export failed: $e');
+                                      if (context.mounted) {
+                                        _showFeedback(
+                                          context,
+                                          "Export failed. Try again.",
+                                        );
+                                      }
                                     }
                                     break;
                                   case GlobalAction.importGridJson:
@@ -913,6 +938,24 @@ class _HomeScreenState extends State<HomeScreen>
     } catch (e, stackTrace) {
       debugPrint("Error in _pickAndOpenWallpaperEditor: $e\n$stackTrace");
     }
+  }
+
+  void _showFeedback(BuildContext context, String message, {bool isError = false}) {
+    final theme = Provider.of<ThemeService>(context, listen: false);
+    final resolved = theme.resolvedTheme(context);
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(
+            message,
+            style: TextStyle(color: resolved.textColor),
+          ),
+          backgroundColor: isError ? Colors.red.shade700 : resolved.dialogColor,
+          behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 3),
+        ),
+      );
   }
 
   void _showWallpaperOptionsDialog(BuildContext context) {

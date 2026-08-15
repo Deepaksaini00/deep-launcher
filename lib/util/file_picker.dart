@@ -1,7 +1,7 @@
 import 'package:file_picker/file_picker.dart';
+import 'dart:convert';
 import 'dart:io';
 
-import 'package:permission_handler/permission_handler.dart';
 import 'package:flutter/foundation.dart';
 
 class GridAppPicker {
@@ -17,32 +17,21 @@ class GridAppPicker {
     return await file.readAsString();
   }
 
-  static Future<void> requestAllFilesAccess() async {
-    if (await Permission.manageExternalStorage.isGranted) return;
+  static Future<String?> saveJsonFile(String json) async {
+    final path = await FilePicker.platform.saveFile(
+      dialogTitle: 'Save grid apps',
+      fileName: _exportFileName,
+      type: FileType.any,
+      bytes: utf8.encode(json),
+    );
 
-    final status = await Permission.manageExternalStorage.request();
-
-    if (!status.isGranted) {
-      await openAppSettings();
-      throw Exception("User denied MANAGE_EXTERNAL_STORAGE");
-    }
-  }
-
-  static Future<String> saveFileToLocalStorage(String json) async {
-    await requestAllFilesAccess();
-    final downloadsDir = Directory("/storage/emulated/0/Download");
-
-    if (!downloadsDir.existsSync()) {
-      throw Exception("⚠️ Download folder not found!");
+    if (path == null) {
+      debugPrint("📤 Export canceled by user");
+      return null;
     }
 
-    final file = File("${downloadsDir.path}/$_exportFileName");
+    debugPrint("📤 Exported JSON saved at: $path");
 
-    // Write bytes (required on Android)
-    await file.writeAsBytes(json.codeUnits, flush: true);
-
-    debugPrint("📤 Exported JSON saved at: ${file.path}");
-
-    return file.path;
+    return path;
   }
 }
